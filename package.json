@@ -1,19 +1,14 @@
 {
-  "name": "svgr-sprite",
+  "name": "symbol-store",
   "private": true,
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "postinstall": "husky",
-    "prepack": "pinst --disable",
-    "postpack": "pinst --enable"
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "husky": "^9.1.7",
-    "lint-staged": "^15.4.1",
     "prettier": "^3.2.5",
     "turbo": "^2.3.3",
     "typescript": "5.5.4"
@@ -21,9 +16,9 @@
   "engines": {
     "node": ">=23.6.0"
   },
-  "packageManager": "yarn@1.22.22",
   "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+    "test",
+    "package"
+  ],
+  "packageManager": "yarn@4.6.0"
 }

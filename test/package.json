@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "run-p generate:spritemap build:app",
+    "build:app": "next build",
     "start": "next start",
     "lint": "next lint",
     "generate:spritemap": "symbol-store -i ./icons -o ./public -t ./src"
@@ -17,12 +18,13 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@repo/symbol-store": "*",
+    "@timhettler/symbol-store": "*",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.4",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5"
   }
 }
