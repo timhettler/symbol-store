@@ -45,3 +45,14 @@ Run `symbol-store -h` for details in your terminal.
 | `-i`   | Y        | Path containing SVG files       | N/A         |
 | `-o`   | N        | Path to output the combined SVG | Input path  |
 | `-t`   | N        | Create a TypeScript file?       | Output path |
+
+## References & Prior Art
+
+- [svgstore](https://github.com/svgstore/svgstore)
+- [epic-stack-with-svg-sprites](https://github.com/kiliman/epic-stack-with-svg-sprites)
+- [@svguse](https://github.com/fpapado/svg-use/)
+- [SVGR](https://react-svgr.com/)
+- [Lambatest: Icon Fonts vs SVG – Clash of the Icons](https://www.lambdatest.com/blog/its-2019-lets-end-the-debate-on-icon-fonts-vs-svg-icons/)
+- [Ben Adam: The "best" way to manage icons in React.js](https://benadam.me/thoughts/react-svg-sprites/)
+- [CSS-Tricks: SVG symbol a Good Choice for Icons](https://css-tricks.com/svg-symbol-good-choice-icons/)
+- [Jacob 'Kurt' Groß](https://kurtextrem.de/posts/svg-in-js)
