@@ -15,12 +15,11 @@ export const Sprite = () => {
         SymbolStore
       </Heading>
       <Text as="p">
-        This demo utilizes a single SVG store in the <Code>/public</Code>{" "}
-        folder. It is preloaded by the root layout component to improve
-        performance:
+        This demo utilizes a single SVG file in the <Code>/public</Code> folder.
+        It is preloaded by the root layout component to improve performance:
       </Text>
       <blockquote>
-        <Code>{`<link rel="preload" href="/spritemap.svg" as="image" type="image/svg+xml" />`}</Code>
+        <Code>{`<link rel="preload" href="/symbolstore.svg" as="image" type="image/svg+xml" />`}</Code>
       </blockquote>
       <Text as="p">
         And referenced by the custom <Code>UseSvg</Code> component:
@@ -30,7 +29,7 @@ export const Sprite = () => {
           style={{ whiteSpace: "pre" }}
         >{`export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`/spritemap.svg#\${node}\`} />
+    <use href={\`/symbolstore.svg#\${node}\`} />
   </svg>
 );`}</Code>
       </blockquote>

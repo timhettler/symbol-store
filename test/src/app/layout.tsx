@@ -25,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  preload("/spritemap.svg", { as: "image", type: "image/svg+xml" });
+  preload("/symbolstore.svg", { as: "image", type: "image/svg+xml" });
 
   return (
     <html lang="en">

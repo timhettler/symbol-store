@@ -9,7 +9,7 @@
   "files": [
     "dist"
   ],
-  "bin": "./dist/bin/create.js",
+  "bin": "./dist/bin/symbol-store.js",
   "license": "MIT",
   "keywords": [
     "ui",
@@ -34,7 +34,7 @@
     "test": "run-p test:types test:unit test:output",
     "test:types": "tsc --noEmit",
     "test:unit": "mocha",
-    "test:output": "./dist/bin/create.js -i ./__test__/icons -o ./__test__/out"
+    "test:output": "./dist/bin/symbol-store.js -i ./__test__/icons -o ./__test__/out"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

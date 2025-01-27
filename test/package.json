@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "run-p generate:spritemap build:app",
+    "build": "run-p generate:symbolstore build:app",
     "build:app": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate:spritemap": "symbol-store -i ./icons -o ./public -t ./src"
+    "generate:symbolstore": "symbol-store -i ./icons -o ./public -t ./src",
+    "test": "yarn generate:symbolstore"
   },
   "dependencies": {
     "@radix-ui/themes": "^3.1.6",

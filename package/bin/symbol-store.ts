@@ -15,14 +15,14 @@ const program = new Command();
 program.name(info.name).description(info.description).version(info.version);
 
 program
-  .requiredOption("-i, --input <type>", "path containing svg files")
+  .requiredOption("-i, --input <type>", "Path containing svg files")
   .option(
     "-o, --output <type>",
-    "path to output the sprite file (defaults to input path)",
+    "Path to output the combined SVG (defaults to input path)"
   )
   .option(
     "-t, --typescript-output [type]",
-    "create a TyepScript helper file with optional output path (defaults to output path)",
+    "create a TypeScript helper file with optional output path (defaults to output path)"
   );
 
 program.parse();
@@ -55,7 +55,7 @@ if (!fs.existsSync(output)) {
   fs.mkdirSync(output, { recursive: true });
 }
 
-fs.writeFileSync(path.resolve(output, "spritemap.svg"), svg);
+fs.writeFileSync(path.resolve(output, "symbolstore.svg"), svg);
 
 // Use getSvgDataFromFile to get the ID of every SVG in a directory and output them to a typescript file containing an array of strings
 const svgFiles = fs.readdirSync(input).filter((file) => file.endsWith(".svg"));
@@ -76,13 +76,13 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
 
 export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`/spritemap.svg#\${node}\`} />
+    <use href={\`/symbolstore.svg#\${node}\`} />
   </svg>
 );`;
 
   const ReactComponent = template.replace(
     "<!-- SYMBOL_ID_ARRAY -->",
-    JSON.stringify(svgIds),
+    JSON.stringify(svgIds)
   );
 
   if (!fs.existsSync(typescriptOutput)) {
@@ -91,6 +91,6 @@ export const UseSvg = ({ node, ...props }: UseProps) => (
 
   fs.writeFileSync(
     path.resolve(typescriptOutput, "UseSvg.tsx"),
-    ReactComponent,
+    ReactComponent
   );
 }
