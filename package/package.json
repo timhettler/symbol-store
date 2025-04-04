@@ -7,9 +7,20 @@
     "access": "public"
   },
   "files": [
-    "dist"
+    "package.json",
+    "README.md",
+    "LICENSE.txt",
+    "bin/**/*.ts",
+    "lib/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
   ],
   "bin": "./dist/bin/symbol-store.js",
+  "imports": {
+    "#root/*": "./*"
+  },
   "license": "MIT",
   "keywords": [
     "ui",
@@ -21,20 +32,27 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/timhettler/symbol-store"
+    "url": "git+https://github.com/timhettler/symbol-store.git"
   },
   "scripts": {
-    "build": "run-s build:code build:permissions",
-    "build:code": "tsc",
-    "build:permissions": "chmod +x ./dist/bin/*",
-    "check-types": "tsc --noEmit",
-    "lint": "run-s lint:code lint:format",
+    "\n========== Building ==========": "",
+    "build": "run-s clean tsc chmod",
+    "clean": "shx rm -rf ./dist/*",
+    "chmod": "chmod +x ./dist/bin/*",
+    "\n========== Linting ==========": "",
+    "lint": "run-p lint:code lint:format",
     "lint:code": "eslint . --fix",
     "lint:format": "prettier . --write",
+    "lint:publish": "npx publint",
+    "lint:package": "npx npm-package-json-lint .",
+    "\n========== Testing ==========": "",
+    "check-types": "tsc --noEmit",
     "test": "run-p test:types test:unit test:output",
     "test:types": "tsc --noEmit",
-    "test:unit": "mocha",
-    "test:output": "./dist/bin/symbol-store.js -i ./__test__/icons -o ./__test__/out"
+    "test:unit": "mocha --enable-source-maps",
+    "test:output": "./dist/bin/symbol-store.js -i ./__test__/icons -o ./__test__/out",
+    "\n========== Publishing ==========": "",
+    "prepublishOnly": "npm-run-all --parallel build lint:package lint:publish"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
@@ -48,6 +66,7 @@
     "mocha": "^11.0.1",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.4.2",
+    "shx": "^0.3.4",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },

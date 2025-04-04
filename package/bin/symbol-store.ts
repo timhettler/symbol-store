@@ -9,10 +9,10 @@ import {
   getSvgSymbolFromFile,
 } from "../lib/index.ts";
 import { optimizeSvg } from "../lib/utils/optimizeSvg.ts";
-import info from "../package.json" with { type: "json" };
+import pkg from "#root/package.json" with { type: "json" };
 
 const program = new Command();
-program.name(info.name).description(info.description).version(info.version);
+program.name(pkg.name).description(pkg.description).version(pkg.version);
 
 program
   .requiredOption("-i, --input <type>", "Path containing svg files")
@@ -23,6 +23,10 @@ program
   .option(
     "-t, --typescript-output [type]",
     "create a TypeScript helper file with optional output path (defaults to output path)"
+  )
+  .option(
+    "-r, --random-suffix",
+    "append a random number to output filenames. This is useful if your server has a long cache for stastic assets."
   );
 
 program.parse();
@@ -36,6 +40,12 @@ const typescriptOutput =
     : typeof options.typescriptOutput === "string"
       ? options.typescriptOutput
       : output;
+const useRandomSuffix = options.randomSuffix || false;
+
+// Generate random suffix once
+const randomSuffix = useRandomSuffix
+  ? `-${Math.floor(Math.random() * 10000)}`
+  : "";
 
 const symbolDefinitions = fs
   .readdirSync(input)
@@ -55,7 +65,7 @@ if (!fs.existsSync(output)) {
   fs.mkdirSync(output, { recursive: true });
 }
 
-fs.writeFileSync(path.resolve(output, "symbolstore.svg"), svg);
+fs.writeFileSync(path.resolve(output, `symbolstore${randomSuffix}.svg`), svg);
 
 // Use getSvgDataFromFile to get the ID of every SVG in a directory and output them to a typescript file containing an array of strings
 const svgFiles = fs.readdirSync(input).filter((file) => file.endsWith(".svg"));
@@ -76,7 +86,7 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
 
 export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`/symbolstore.svg#\${node}\`} />
+    <use href={\`/symbolstore${randomSuffix}.svg#\${node}\`} />
   </svg>
 );`;
 

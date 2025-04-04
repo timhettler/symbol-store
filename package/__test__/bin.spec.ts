@@ -2,7 +2,7 @@ import { equal } from "node:assert";
 import { exec } from "node:child_process";
 import { existsSync, rmdirSync } from "node:fs";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -44,6 +44,47 @@ describe("Symbol Store CLI", function () {
       const reactOutputPath = path.resolve(__dirname, "./out/react/UseSvg.tsx");
       const reactFileExists = existsSync(reactOutputPath);
       equal(reactFileExists, true, "React output file does not exist");
+
+      done();
+    });
+  });
+
+  it("should create matching references when using random suffix", function (done) {
+    this.timeout(5000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react -r`;
+
+    exec(command, async (error) => {
+      if (error) {
+        done(error);
+        return;
+      }
+
+      // Find the generated SVG file with random suffix
+      const outDir = path.resolve(__dirname, "./out");
+      const svgFile = (await readdir(outDir)).find(
+        (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
+      );
+
+      equal(!!svgFile, true, "SVG file with random suffix not found");
+
+      // Extract the random suffix
+      const suffix = svgFile?.match(/-\d+/)?.[0];
+      equal(!!suffix, true, "Random suffix not found in SVG filename");
+
+      // Read the React component file
+      const reactContent = await readFile(
+        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        "utf-8"
+      );
+
+      // Check if the reference matches
+      const expectedReference = `/symbolstore${suffix}.svg#`;
+      equal(
+        reactContent.includes(expectedReference),
+        true,
+        "React component doesn't reference correct SVG filename"
+      );
 
       done();
     });

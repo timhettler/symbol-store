@@ -8,7 +8,7 @@ function getSymbolId(filePath: string): string {
   const name = parse(filePath).name;
   if (!name || /^\d/.test(name) || /\s/.test(name)) {
     throw new Error(
-      `Invalid symbol ID: ${name}. IDs must contain at least one character, cannot start with a number, and must not contain whitespaces`,
+      `Invalid symbol ID: ${name}. IDs must contain at least one character, cannot start with a number, and must not contain whitespaces`
     );
   }
 
@@ -32,7 +32,7 @@ function getSvgDataFromFile(filePath: string): {
 function getSvgSymbol(
   id: string,
   viewBox: string = "",
-  content: string | null = "",
+  content: string | null = ""
 ): string {
   return `<symbol id="${id}" viewBox="${viewBox}">${content}</symbol>`;
 }
