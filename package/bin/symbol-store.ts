@@ -26,7 +26,11 @@ program
   )
   .option(
     "-r, --random-suffix",
-    "append a random number to output filenames. This is useful if your server has a long cache for stastic assets."
+    "append a random number to the combined SVG output filename"
+  )
+  .option(
+    "-p, --proxy <type>",
+    "URL to proxy SVG requests through (e.g., /api/sprite)"
   );
 
 program.parse();
@@ -75,6 +79,10 @@ const svgIds = svgFiles.map((file) => {
 });
 
 if (typescriptOutput) {
+  const proxyUrl = options.proxy
+    ? `${options.proxy}#`
+    : `/symbolstore${randomSuffix}.svg#`;
+
   const template = `import React from "react";
 
 export const SYMBOL_IDS = <!-- SYMBOL_ID_ARRAY --> as const;
@@ -86,7 +94,7 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
 
 export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`/symbolstore${randomSuffix}.svg#\${node}\`} />
+    <use href={\`${proxyUrl}\${node}\`} />
   </svg>
 );`;
 

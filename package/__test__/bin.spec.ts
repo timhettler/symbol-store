@@ -89,4 +89,31 @@ describe("Symbol Store CLI", function () {
       done();
     });
   });
+
+  it("should use proxy URL in React component when provided", function (done) {
+    this.timeout(5000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react -p /api/sprite`;
+
+    exec(command, async (error) => {
+      if (error) {
+        done(error);
+        return;
+      }
+
+      const reactContent = await readFile(
+        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        "utf-8"
+      );
+
+      const expectedReference = "/api/sprite#";
+      equal(
+        reactContent.includes(expectedReference),
+        true,
+        "React component doesn't use proxy URL"
+      );
+
+      done();
+    });
+  });
 });
