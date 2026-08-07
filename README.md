@@ -46,13 +46,16 @@ symbol-store -i ./icons -o ./public -t ./src/components
 
 Run `symbol-store -h` for details in your terminal.
 
-| Option | Required | Description                     | Default     |
-| ------ | -------- | ------------------------------- | ----------- |
-| `-i`   | Y        | Path containing SVG files       | N/A         |
-| `-o`   | N        | Path to output the combined SVG | Input path  |
-| `-t`   | N        | Create a TypeScript file?       | Output path |
-| `-r`   | N        | Add random suffix to filenames  | `false`     |
-| `-p`   | N        | URL to proxy SVG requests       | N/A         |
+| Option   | Required | Description                                  | Default     |
+| -------- | -------- | -------------------------------------------- | ----------- |
+| `-i`     | Y        | Path containing SVG files                    | N/A         |
+| `-o`     | N        | Path to output the combined SVG              | Input path  |
+| `-t`     | N        | Create a TypeScript file?                    | Output path |
+| `--hash` | N        | Append a content hash to the sprite filename | `false`     |
+| `-r`     | N        | Deprecated alias for `--hash`                | `false`     |
+| `-p`     | N        | URL to proxy SVG requests                    | N/A         |
+
+The `--hash` suffix is a short, deterministic hash of the sprite's contents: the filename stays identical across builds and machines when the icons don't change, and changes only when they do. That makes a hashed sprite safe to serve with a long-lived [immutable cache](#caching) while still busting automatically after an icon update. (`-r` is kept as a deprecated alias — it used to append a random number.)
 
 ## Accessibility
 
@@ -178,7 +181,7 @@ Next.js doesn't add long-lived cache headers to files in `public/` — only asse
 
 You can cache it aggressively with a `headers()` rule in `next.config.ts`, **but only mark it `immutable` if its URL changes whenever its contents do** — otherwise returning visitors keep the stale sprite until the cache expires.
 
-The safe way is to give the sprite a per-build filename (the `-r` flag) and match that filename:
+The safe way is to give the sprite a content-hashed filename (the `--hash` flag) and match that filename:
 
 ```ts
 // next.config.ts
@@ -186,7 +189,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:sprite(symbolstore-\\d+\\.svg)",
+        source: "/:sprite(symbolstore-[0-9a-f]+\\.svg)",
         headers: [
           {
             key: "Cache-Control",
@@ -201,9 +204,7 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-If you serve the stable `symbolstore.svg` filename instead, don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
-
-> **Note:** `-r` currently appends a random number; deterministic, content-based hashing is planned in [#8](https://github.com/timhettler/symbol-store/issues/8).
+If you serve the stable `symbolstore.svg` filename instead (no `--hash`), don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
 
 ## References & Prior Art
 

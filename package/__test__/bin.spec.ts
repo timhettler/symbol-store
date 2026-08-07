@@ -49,10 +49,10 @@ describe("Symbol Store CLI", function () {
     });
   });
 
-  it("should create matching references when using random suffix", function (done) {
+  it("should create matching references when using a content hash", function (done) {
     this.timeout(5000);
 
-    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react -r`;
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react --hash`;
 
     exec(command, async (error) => {
       if (error) {
@@ -60,17 +60,17 @@ describe("Symbol Store CLI", function () {
         return;
       }
 
-      // Find the generated SVG file with random suffix
+      // Find the generated SVG file with the content-hash suffix
       const outDir = path.resolve(__dirname, "./out");
       const svgFile = (await readdir(outDir)).find(
         (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
       );
 
-      equal(!!svgFile, true, "SVG file with random suffix not found");
+      equal(!!svgFile, true, "Hashed SVG file not found");
 
-      // Extract the random suffix
-      const suffix = svgFile?.match(/-\d+/)?.[0];
-      equal(!!suffix, true, "Random suffix not found in SVG filename");
+      // The suffix is a lowercase-hex content hash, not a random number.
+      const suffix = svgFile?.match(/-[0-9a-f]+/)?.[0];
+      equal(!!suffix, true, "Hex content-hash suffix not found in SVG filename");
 
       // Read the React component file
       const reactContent = await readFile(
@@ -87,6 +87,42 @@ describe("Symbol Store CLI", function () {
       );
 
       done();
+    });
+  });
+
+  it("should produce the same hashed filename for the same input (deterministic)", function (done) {
+    this.timeout(8000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out --hash`;
+    const outDir = path.resolve(__dirname, "./out");
+
+    const hashedFile = async () =>
+      (await readdir(outDir)).find(
+        (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
+      );
+
+    exec(command, async (error) => {
+      if (error) {
+        done(error);
+        return;
+      }
+      const first = await hashedFile();
+      equal(!!first, true, "Hashed SVG file not found on first run");
+
+      // Re-run with identical input; the content-addressed filename must not change.
+      exec(command, async (error2) => {
+        if (error2) {
+          done(error2);
+          return;
+        }
+        const second = await hashedFile();
+        equal(
+          second,
+          first,
+          "Identical input produced a different hashed filename"
+        );
+        done();
+      });
     });
   });
 
