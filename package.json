@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "turbo": "^2.3.3",
+    "turbo": "^2.10.8",
     "typescript": "^5.7.3"
   },
   "engines": {
@@ -20,5 +20,20 @@
     "test",
     "package"
   ],
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.6.0",
+  "resolutions": {
+    "@eslint/plugin-kit": "^0.3.4",
+    "ajv": "^6.14.0",
+    "diff": "^5.2.2",
+    "flatted": "^3.4.1",
+    "ip-address": "^10.3.0",
+    "js-yaml": "^4.3.1",
+    "picomatch": "^2.3.2",
+    "serialize-javascript": "^7.0.5",
+    "shell-quote": "^1.10.0",
+    "tar": "^7.5.22",
+    "undici": "^6.28.0",
+    "postcss": "^8.5.26",
+    "sharp": "^0.35.3"
+  }
 }
