@@ -25,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  preload("/symbolstore.svg", { as: "image", type: "image/svg+xml" });
+  preload("/api/symbol-store", { as: "fetch", crossOrigin: "anonymous" });
 
   return (
     <html lang="en">

@@ -9,6 +9,6 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
 
 export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={`/spritemap.svg#${node}`} />
+    <use href={`/api/symbol-store#${node}`} />
   </svg>
 );

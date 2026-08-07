@@ -116,4 +116,43 @@ describe("Symbol Store CLI", function () {
       done();
     });
   });
+
+  it("should keep a stable proxy reference while writing a hashed sprite file when combining --proxy and --random-suffix", function (done) {
+    this.timeout(5000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react -p /api/sprite -r`;
+
+    exec(command, async (error) => {
+      if (error) {
+        done(error);
+        return;
+      }
+
+      // The on-disk sprite is written with the random suffix...
+      const outDir = path.resolve(__dirname, "./out");
+      const svgFile = (await readdir(outDir)).find(
+        (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
+      );
+      equal(!!svgFile, true, "Hashed sprite file not found");
+
+      // ...but the helper keeps the stable proxy endpoint (no hash baked in),
+      // so the proxy route stays a fixed URL the consumer controls.
+      const reactContent = await readFile(
+        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        "utf-8"
+      );
+      equal(
+        reactContent.includes("/api/sprite#"),
+        true,
+        "React component doesn't use the stable proxy URL"
+      );
+      equal(
+        reactContent.includes(".svg#"),
+        false,
+        "Proxy helper should not bake a .svg filename into the reference"
+      );
+
+      done();
+    });
+  });
 });

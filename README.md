@@ -10,10 +10,9 @@ An opinionated command-line tool to combine multiple SVG files into a single fil
 
 ## Motivation
 
-For many years [SVGR](https://react-svgr.com/) has been the de facto solution for rendering SVGs in React apps. (Perhaps because it was bundle with Create React App.) However, after working on production-facing, high-traffic websites for many years, I've realized that importing SVGs one-by-one as React components has real performance issues, mainly:
+For many years [SVGR](https://react-svgr.com/) has been the de facto solution for rendering SVGs in React apps. (Perhaps because it was bundled with Create React App.) However, after working on production-facing, high-traffic websites for many years, I've realized that importing SVGs one-by-one as React components has real performance issues, mainly:
 
-- The SVG components can represent [a large percentage of your bundled script size](https://kurtextrem.de/posts/svg-in-js). (This can be confirmed by using - The SVG components can represent a large percentage of your bundled script size. (This can be confirmed by using )
-  .)
+- The SVG components can represent [a large percentage of your bundled script size](https://kurtextrem.de/posts/svg-in-js).
 - When rendered, the SVG components can add a huge amount of DOM nodes to your page. [Excessive DOM size can adversely affect your Lighthouse score](https://developer.chrome.com/docs/lighthouse/performance/dom-size).
 
 ## When Should You Use This Library?
@@ -68,18 +67,25 @@ You'll need to create a route handler to proxy the requests:
 
 ```typescript
 // app/api/symbol-store/route.ts
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { NextResponse } from "next/server";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 export async function GET() {
   const isDev = process.env.NEXT_PHASE === PHASE_DEVELOPMENT_SERVER;
 
-  const svgUrl = isDev
-    ? "/symbolstore.svg"
-    : "https://cdn.mydomain.com/symbolstore.svg";
-
-  const res = await fetch(svgUrl);
-  const svg = await res.text();
+  // In development, read the sprite from ./public on disk. In production, fetch
+  // it from your CDN — server-side fetches aren't subject to the `<use>`
+  // cross-origin restriction that breaks the reference in the browser.
+  const svg = isDev
+    ? await readFile(
+        path.join(process.cwd(), "public", "symbolstore.svg"),
+        "utf-8"
+      )
+    : await fetch("https://cdn.mydomain.com/symbolstore.svg").then((res) =>
+        res.text()
+      );
 
   return new NextResponse(svg, {
     headers: {
@@ -89,6 +95,14 @@ export async function GET() {
   });
 }
 ```
+
+### Alternative: inline the sprite (no proxy)
+
+If running a proxy isn't an option, the sprite can instead be **inlined** into the document: fetch it once and inject the `<symbol>` definitions into the DOM so `<use href="#icon">` resolves against the same document — which works from any origin, with no proxy required.
+
+The trade-off is DOM size. Inlining adds one copy of the whole sprite's definitions to the page (a fixed cost, _not_ multiplied by how many icons you render), whereas the proxy keeps them in a separately-cached file and the page at just `<use>` references. That runs against the minimal-DOM goal described in [Motivation](#motivation), which is why the proxy is the default recommendation.
+
+Inline output isn't built into the CLI yet — it's tracked in [#5](https://github.com/timhettler/symbol-store/issues/5).
 
 ## Preloading
 

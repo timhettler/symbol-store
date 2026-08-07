@@ -15,21 +15,24 @@ export const Sprite = () => {
         SymbolStore
       </Heading>
       <Text as="p">
-        This demo utilizes a single SVG file in the <Code>/public</Code> folder.
-        It is preloaded by the root layout component to improve performance:
+        This demo serves a single combined SVG sprite through a same-origin
+        proxy route (<Code>/api/symbol-store</Code>). Because SVG{" "}
+        <Code>&lt;use&gt;</Code> cannot load cross-origin, routing the reference
+        through a same-origin handler is what lets the underlying sprite live on
+        a CDN. The endpoint is preloaded by the root layout for performance:
       </Text>
       <blockquote>
-        <Code>{`<link rel="preload" href="/symbolstore.svg" as="image" type="image/svg+xml" />`}</Code>
+        <Code>{`preload("/api/symbol-store", { as: "fetch" });`}</Code>
       </blockquote>
       <Text as="p">
-        And referenced by the custom <Code>UseSvg</Code> component:
+        It is referenced by the generated <Code>UseSvg</Code> component:
       </Text>
       <blockquote>
         <Code
           style={{ whiteSpace: "pre" }}
         >{`export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`/symbolstore.svg#\${node}\`} />
+    <use href={\`/api/symbol-store#\${node}\`} />
   </svg>
 );`}</Code>
       </blockquote>

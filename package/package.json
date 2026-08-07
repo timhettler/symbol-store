@@ -53,6 +53,7 @@
     "test:unit": "mocha --enable-source-maps",
     "test:output": "./dist/bin/symbol-store.js -i ./__test__/icons -o ./__test__/out",
     "\n========== Publishing ==========": "",
+    "prepack": "shx cp ../README.md ./README.md",
     "prepublishOnly": "npm-run-all --parallel build lint:package lint:publish"
   },
   "devDependencies": {
