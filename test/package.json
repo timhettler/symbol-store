@@ -8,7 +8,9 @@
     "build:app": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate:symbolstore": "symbol-store -i ./icons -o ./public -t ./src -p /api/symbol-store",
+    "generate:symbolstore": "run-s generate:symbolstore:simple generate:symbolstore:proxy",
+    "generate:symbolstore:simple": "symbol-store -i ./icons -o ./public -t ./src/simple",
+    "generate:symbolstore:proxy": "symbol-store -i ./icons -o ./public -t ./src/proxy -p /api/symbol-store",
     "test": "yarn generate:symbolstore"
   },
   "dependencies": {

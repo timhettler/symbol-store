@@ -1,23 +1,33 @@
-import styles from "./page.module.css";
-import { Sprite } from "../Sprite";
-import { Container, Grid } from "@radix-ui/themes";
+import Link from "next/link";
+import { Code, Flex, Heading, Text } from "@radix-ui/themes";
+import { IconPlayground } from "@/IconPlayground";
 
-export default function Home() {
+export default function SimplePage() {
   return (
-    <Container style={{ background: "var(--gray-a2)" }}>
-      <Grid
-        gap="3"
-        rows="20px 1fr 20px"
-        align="center"
-        justify="center"
-        minHeight={"100svh"}
-        style={{ background: "white" }}
-        p={{ initial: "3", md: "6" }}
-      >
-        <main className={styles.main}>
-          <Sprite />
-        </main>
-      </Grid>
-    </Container>
+    <Flex direction="column" gap="3">
+      <Heading as="h1" align="center">
+        SymbolStore
+      </Heading>
+      <Text as="p">
+        The simple, same-origin setup: the combined sprite is served straight
+        from <Code>/public</Code> and referenced directly with{" "}
+        <Code>&lt;use&gt;</Code>. No proxy, no runtime JS — this is all most apps
+        need.
+      </Text>
+      <blockquote>
+        <Code
+          style={{ whiteSpace: "pre" }}
+        >{`export const UseSvg = ({ node, ...props }: UseProps) => (
+  <svg {...props}>
+    <use href={\`/symbolstore.svg#\${node}\`} />
+  </svg>
+);`}</Code>
+      </blockquote>
+      <IconPlayground variant="simple" />
+      <Text as="p" size="2" color="gray" align="center">
+        Hosting the sprite on a different origin (a CDN)?{" "}
+        <Link href="/proxy">See the proxy example →</Link>
+      </Text>
+    </Flex>
   );
 }
