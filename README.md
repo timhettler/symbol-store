@@ -133,6 +133,8 @@ If you're using a proxy endpoint, preload that instead:
 
 > **Note:** Using `as="fetch"` instead of `as="image"` when preloading the proxy endpoint ensures the browser makes a single request that can be reused by the `<use>` elements.
 
+> **Note:** In development (`next dev`) you may see a `"resource … was preloaded using link preload but not used within a few seconds"` warning for the sprite. This is a dev-mode / React StrictMode artifact — in a production build the preload is consumed by `<use>` (a single request, no double-fetch).
+
 ## References & Prior Art
 
 - [svgstore](https://github.com/svgstore/svgstore)
