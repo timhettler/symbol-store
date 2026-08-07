@@ -45,3 +45,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Generated at pack time from the root README (see package/ prepack script)
+/package/README.md

@@ -69,7 +69,10 @@ if (!fs.existsSync(output)) {
   fs.mkdirSync(output, { recursive: true });
 }
 
-fs.writeFileSync(path.resolve(output, `symbolstore${randomSuffix}.svg`), svg);
+const spriteFilename = `symbolstore${randomSuffix}.svg`;
+const spritePath = path.resolve(output, spriteFilename);
+fs.writeFileSync(spritePath, svg);
+console.log(`Wrote sprite → ${path.relative(process.cwd(), spritePath)}`);
 
 // Use getSvgDataFromFile to get the ID of every SVG in a directory and output them to a typescript file containing an array of strings
 const svgFiles = fs.readdirSync(input).filter((file) => file.endsWith(".svg"));
@@ -81,7 +84,7 @@ const svgIds = svgFiles.map((file) => {
 if (typescriptOutput) {
   const proxyUrl = options.proxy
     ? `${options.proxy}#`
-    : `/symbolstore${randomSuffix}.svg#`;
+    : `/${spriteFilename}#`;
 
   const template = `import React from "react";
 
@@ -107,8 +110,13 @@ export const UseSvg = ({ node, ...props }: UseProps) => (
     fs.mkdirSync(typescriptOutput, { recursive: true });
   }
 
-  fs.writeFileSync(
-    path.resolve(typescriptOutput, "UseSvg.tsx"),
-    ReactComponent
-  );
+  const helperPath = path.resolve(typescriptOutput, "UseSvg.tsx");
+  fs.writeFileSync(helperPath, ReactComponent);
+  console.log(`Wrote helper → ${path.relative(process.cwd(), helperPath)}`);
+
+  if (options.proxy && useRandomSuffix) {
+    console.log(
+      `Note: proxy "${options.proxy}" must serve the sprite file "${spriteFilename}".`
+    );
+  }
 }
