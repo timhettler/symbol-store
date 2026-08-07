@@ -7,6 +7,7 @@ An opinionated command-line tool to combine multiple SVG files into a single fil
 - SVG optimization using [SVGO](https://svgo.dev/)
 - Removal of `fill` and `stroke` attributes so they may inherit from parent CSS.
 - (Optional) Type-safe React component export.
+- Bundler-agnostic: a standalone CLI build step, not a plugin — no loader config to maintain.
 
 ## Motivation
 
@@ -20,6 +21,12 @@ For many years [SVGR](https://react-svgr.com/) has been the de facto solution fo
 This library is most useful when you have a large number of monochrome SVGs to display on a website - perhaps in multiple places on a single page - and the fill color needs to be modified. That is to say, this library is for icons. Complex SVGs are outside the concerns of this library. For those types of SVGs, I recommend creating a separate process to optimize with SVGO and to import them on an ad-hoc basis.
 
 > While stroke manipulation is possible, it is a best practice to export SVGs with "outlined strokes" so all files can be manipulated predictably.
+
+## A build step, not a plugin
+
+Symbol Store is a standalone command-line tool: you run it and it writes a sprite file (and, optionally, a typed React helper) to disk. It isn't a bundler loader or plugin, so there's no loader configuration to maintain and nothing to wire into your bundler's module resolution.
+
+The practical consequence is that it's **bundler-agnostic**. The generated `.svg` and `.tsx` are ordinary files — the sprite is referenced by URL, and the helper is a plain React component — so they behave identically whether your app is built with Turbopack, webpack, Vite, Rollup, or no bundler at all. Run it however suits your project — a `prebuild` script, another package script, or by hand — and consume the output like any other file.
 
 ## Installation
 
@@ -104,6 +111,12 @@ The trade-off is DOM size. Inlining adds one copy of the whole sprite's definiti
 
 Inline output isn't built into the CLI yet — it's tracked in [#5](https://github.com/timhettler/symbol-store/issues/5).
 
+## First paint
+
+Because icons are referenced from an external file via `<use href="…">`, the browser must fetch the sprite before it can paint any icon — the glyphs aren't part of the server-rendered HTML. On a cold cache this means icons appear a moment after the rest of the page (a brief flash of no-icon), and the [proxy](#cross-origin-requests) can add a server round-trip (e.g. fetching from your CDN) in front of that request.
+
+[Preloading](#preloading) the sprite largely mitigates this. For icons that must be visible immediately — above the fold, for example — inlining the sprite into the document avoids the extra request entirely; that mode is tracked in [#5](https://github.com/timhettler/symbol-store/issues/5).
+
 ## Preloading
 
 Since the SVG symbol file is critical for rendering icons, it's recommended to preload it to avoid render-blocking requests. This is especially important if you're using a proxy endpoint, as the request will need to complete before any icons can be displayed.
@@ -134,6 +147,39 @@ If you're using a proxy endpoint, preload that instead:
 > **Note:** Using `as="fetch"` instead of `as="image"` when preloading the proxy endpoint ensures the browser makes a single request that can be reused by the `<use>` elements.
 
 > **Note:** In development (`next dev`) you may see a `"resource … was preloaded using link preload but not used within a few seconds"` warning for the sprite. This is a dev-mode / React StrictMode artifact — in a production build the preload is consumed by `<use>` (a single request, no double-fetch).
+
+## Caching
+
+Next.js doesn't add long-lived cache headers to files in `public/` — only assets under `/_next/static/` are served as `immutable`. By default the sprite is revalidated on navigation rather than cached for the long term.
+
+You can cache it aggressively with a `headers()` rule in `next.config.ts`, **but only mark it `immutable` if its URL changes whenever its contents do** — otherwise returning visitors keep the stale sprite until the cache expires.
+
+The safe way is to give the sprite a per-build filename (the `-r` flag) and match that filename:
+
+```ts
+// next.config.ts
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/:sprite(symbolstore-\\d+\\.svg)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+If you serve the stable `symbolstore.svg` filename instead, don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
+
+> **Note:** `-r` currently appends a random number; deterministic, content-based hashing is planned in [#8](https://github.com/timhettler/symbol-store/issues/8).
 
 ## References & Prior Art
 
