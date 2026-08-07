@@ -37,7 +37,7 @@
   "scripts": {
     "\n========== Building ==========": "",
     "build": "run-s clean compile chmod",
-    "clean": "shx rm -rf ./dist/*",
+    "clean": "shx rm -rf ./dist",
     "compile": "tsc",
     "chmod": "chmod +x ./dist/bin/*",
     "\n========== Linting ==========": "",

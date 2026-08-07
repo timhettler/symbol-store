@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node version comes from .nvmrc (currently 23.6.0), which the package
+      # requires for native TypeScript type-stripping in the test suite.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Activate the Yarn version pinned in package.json (packageManager: yarn@4.6.0).
+      - name: Enable Corepack
+        run: corepack enable
+
+      # enableGlobalCache is false in .yarnrc.yml, so the cache lives in .yarn/cache.
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      # --immutable fails if yarn.lock is out of date, which also validates
+      # dependency-bump PRs.
+      - name: Install
+        run: yarn install --immutable
+
+      # Builds every workspace (the published package compiles to dist/, and the
+      # demo app runs next build). turbo caches, so the package build isn't
+      # repeated by the test step below.
+      - name: Build
+        run: yarn build
+
+      # turbo test: type-check (tsc --noEmit), unit tests (mocha), and the CLI
+      # output test for the package, plus sprite generation for the demo app.
+      - name: Test
+        run: yarn test
