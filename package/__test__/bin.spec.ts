@@ -68,8 +68,7 @@ describe("Symbol Store CLI", function () {
 
       equal(!!svgFile, true, "Hashed SVG file not found");
 
-      // The suffix must be exactly 8 lowercase-hex chars (a content hash). A
-      // looser `[0-9a-f]+` check would still pass the old random *decimal* int.
+      // The suffix must be exactly 8 lowercase-hex chars (the content hash).
       const suffix = svgFile?.match(/-[0-9a-f]+/)?.[0];
       equal(
         /^-[0-9a-f]{8}$/.test(String(suffix)),
@@ -100,9 +99,8 @@ describe("Symbol Store CLI", function () {
 
     const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out --hash`;
 
-    // Read each run's actual output filename from stdout ("Wrote sprite → …"),
-    // rather than scanning the shared out dir (which can't distinguish the two
-    // runs and could mask a non-deterministic regression).
+    // Compare each run's output filename, read from stdout ("Wrote sprite → …"):
+    // identical input must produce the identical hashed name.
     const nameFrom = (stdout: string) =>
       stdout.match(/symbolstore-[0-9a-f]{8}\.svg/)?.[0];
 
