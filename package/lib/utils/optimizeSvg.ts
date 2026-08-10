@@ -34,7 +34,7 @@ export function optimizeSvg(svgString: string) {
             enter: (node) => {
               for (const attr of ["fill", "stroke"] as const) {
                 const value = node.attributes[attr];
-                if (value !== undefined && value.toLowerCase() !== "none") {
+                if (value !== undefined && value.trim().toLowerCase() !== "none") {
                   delete node.attributes[attr];
                 }
               }

@@ -22,7 +22,7 @@ This library is most useful when you have a large number of monochrome SVGs to d
 
 > While stroke manipulation is possible, it is a best practice to export SVGs with "outlined strokes" so all files can be manipulated predictably.
 
-> **`fill="none"` is preserved.** Only _colored_ `fill`/`stroke` values are stripped (so the icon inherits `color`); an explicit `fill="none"` is left intact. Icons that rely on unpainted regions — rings, holes, outline-plus-fill pairs, even-odd cutouts — render correctly. (`stroke="none"` may still be dropped as redundant, since `none` is the SVG default for `stroke`.)
+> **`fill="none"` is preserved.** Only _colored_ `fill`/`stroke` **attributes** are stripped (so the icon inherits `color`); an explicit `fill="none"` is left intact. Icons that rely on unpainted regions — rings, holes, outline-plus-fill pairs, even-odd cutouts — render correctly. (`stroke="none"` may still be dropped as redundant, since `none` is the SVG default for `stroke`. Colors set via inline `style` — e.g. `style="fill:#000"` — are not touched, so export flat `fill`/`stroke` attributes rather than inline styles.)
 
 ## A build step, not a plugin
 

@@ -44,4 +44,15 @@ describe("optimizeSvg", () => {
     const out = optimizeSvg(input);
     ok(!/fill="/.test(out), "a single colored fill should be removed entirely");
   });
+
+  it('preserves fill="none" case-insensitively', () => {
+    const out = optimizeSvg(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10H0z" fill="NONE"/></svg>`
+    );
+    const fills = attrValues(out, "fill");
+    ok(
+      fills.length > 0 && fills.every((v) => v.toLowerCase() === "none"),
+      `uppercase fill="NONE" should be preserved, got ${JSON.stringify(fills)}`
+    );
+  });
 });
