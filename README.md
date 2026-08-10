@@ -101,12 +101,13 @@ You'll need to create a route handler to proxy the requests:
 
 ```typescript
 // app/api/symbol-store/route.ts
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-export async function GET() {
+export async function GET(request: Request) {
   const isDev = process.env.NEXT_PHASE === PHASE_DEVELOPMENT_SERVER;
 
   // In development, read the sprite from ./public on disk. In production, fetch
@@ -121,14 +122,32 @@ export async function GET() {
         res.text()
       );
 
+  // This endpoint has a *stable* URL (`/api/symbol-store` — no hash is baked in),
+  // so its contents are mutable and must NOT be served `immutable`: that would
+  // pin returning visitors to a stale sprite for up to a year after a redeploy.
+  // Attach a content ETag and revalidate instead — an unchanged sprite returns a
+  // cheap 304, and an icon update is picked up on the next request.
+  const etag = `"${createHash("sha256").update(svg).digest("hex").slice(0, 16)}"`;
+  const cacheControl = "public, max-age=0, must-revalidate";
+
+  if (request.headers.get("if-none-match") === etag) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: { ETag: etag, "Cache-Control": cacheControl },
+    });
+  }
+
   return new NextResponse(svg, {
     headers: {
       "Content-Type": "image/svg+xml",
-      "Cache-Control": "public, max-age=31536000",
+      "Cache-Control": cacheControl,
+      ETag: etag,
     },
   });
 }
 ```
+
+> **Caching:** because the proxy URL is stable, don't mark it `immutable`. If you'd rather cache at the edge, `s-maxage` + `stale-while-revalidate` (e.g. `public, s-maxage=86400, stale-while-revalidate=604800`) is a good alternative that bounds staleness while still revalidating. The static (non-proxy) sprite can be hashed with [`--hash`](#options) and served `immutable`; see [Caching](#caching).
 
 ### Alternative: inline the sprite (no proxy)
 
