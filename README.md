@@ -71,12 +71,15 @@ Run `symbol-store -h` for details in your terminal.
 | `-i`       | Y        | Path containing SVG files                    | N/A         |
 | `-o`       | N        | Path to output the combined SVG              | Input path  |
 | `-t`       | N        | Create a TypeScript file?                    | Output path |
+| `-c`       | N        | Name for the generated component (and its file) | `Icon`   |
 | `--hash`   | N        | Append a content hash to the sprite filename | `false`     |
 | `-r`       | N        | Deprecated alias for `--hash`                | `false`     |
 | `-p`       | N        | URL to proxy SVG requests                    | N/A         |
 | `--inline` | N        | Emit an inline `<SymbolStoreSprite>` (no proxy, cross-origin) | `false` |
 
 The `--hash` suffix is a short, deterministic hash of the sprite's contents: the filename stays identical across builds and machines when the icons don't change, and changes only when they do. That makes a hashed sprite safe to serve with a long-lived [immutable cache](#caching) while still busting automatically after an icon update. (`-r` is kept as a deprecated alias — it used to append a random number.)
+
+The generated component is named `Icon` by default. Pass `-c/--component-name` (a PascalCase name) to change it — e.g. `-c Glyph` emits `Glyph.tsx` exporting `Glyph`.
 
 ## Accessibility
 
