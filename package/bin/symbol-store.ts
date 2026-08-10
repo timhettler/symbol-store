@@ -48,6 +48,13 @@ const typescriptOutput =
     : typeof options.typescriptOutput === "string"
       ? options.typescriptOutput
       : output;
+
+if (options.inline && !typescriptOutput) {
+  console.warn(
+    "Warning: --inline has no effect without -t/--typescript-output — the <SymbolStoreSprite> component (and the in-document reference) are only emitted with a TypeScript output path."
+  );
+}
+
 const useRandomSuffix = options.randomSuffix || false;
 
 // Generate random suffix once

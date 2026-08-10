@@ -51,6 +51,7 @@ Run `symbol-store -h` for details in your terminal.
 | `-t`   | N        | Create a TypeScript file?       | Output path |
 | `-r`   | N        | Add random suffix to filenames  | `false`     |
 | `-p`   | N        | URL to proxy SVG requests       | N/A         |
+| `--inline` | N    | Emit an inline `<SymbolStoreSprite>` (no proxy, cross-origin) | `false` |
 
 ## Cross-Origin Requests
 
