@@ -49,10 +49,10 @@ describe("Symbol Store CLI", function () {
     });
   });
 
-  it("should create matching references when using random suffix", function (done) {
+  it("should create matching references when using a content hash", function (done) {
     this.timeout(5000);
 
-    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react -r`;
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -t ./__test__/out/react --hash`;
 
     exec(command, async (error) => {
       if (error) {
@@ -60,17 +60,21 @@ describe("Symbol Store CLI", function () {
         return;
       }
 
-      // Find the generated SVG file with random suffix
+      // Find the generated SVG file with the content-hash suffix
       const outDir = path.resolve(__dirname, "./out");
       const svgFile = (await readdir(outDir)).find(
         (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
       );
 
-      equal(!!svgFile, true, "SVG file with random suffix not found");
+      equal(!!svgFile, true, "Hashed SVG file not found");
 
-      // Extract the random suffix
-      const suffix = svgFile?.match(/-\d+/)?.[0];
-      equal(!!suffix, true, "Random suffix not found in SVG filename");
+      // The suffix must be exactly 8 lowercase-hex chars (the content hash).
+      const suffix = svgFile?.match(/-[0-9a-f]+/)?.[0];
+      equal(
+        /^-[0-9a-f]{8}$/.test(String(suffix)),
+        true,
+        "suffix should be exactly 8 lowercase-hex chars"
+      );
 
       // Read the React component file
       const reactContent = await readFile(
@@ -86,6 +90,59 @@ describe("Symbol Store CLI", function () {
         "React component doesn't reference correct SVG filename"
       );
 
+      done();
+    });
+  });
+
+  it("should produce the same hashed filename for the same input (deterministic)", function (done) {
+    this.timeout(8000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out --hash`;
+
+    // Compare each run's output filename, read from stdout ("Wrote sprite → …"):
+    // identical input must produce the identical hashed name.
+    const nameFrom = (stdout: string) =>
+      stdout.match(/symbolstore-[0-9a-f]{8}\.svg/)?.[0];
+
+    exec(command, (error, stdout1) => {
+      if (error) {
+        done(error);
+        return;
+      }
+      const first = nameFrom(stdout1);
+      equal(!!first, true, "hashed filename was not printed on the first run");
+
+      // Re-run with identical input; the content-addressed filename must not change.
+      exec(command, (error2, stdout2) => {
+        if (error2) {
+          done(error2);
+          return;
+        }
+        equal(
+          nameFrom(stdout2),
+          first,
+          "identical input produced a different hashed filename"
+        );
+        done();
+      });
+    });
+  });
+
+  it("warns that -r/--random-suffix is deprecated", function (done) {
+    this.timeout(5000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -r`;
+
+    exec(command, (error, _stdout, stderr) => {
+      if (error) {
+        done(error);
+        return;
+      }
+      equal(
+        /deprecated/i.test(stderr),
+        true,
+        "expected a deprecation warning on stderr for -r"
+      );
       done();
     });
   });
@@ -128,7 +185,7 @@ describe("Symbol Store CLI", function () {
         return;
       }
 
-      // The on-disk sprite is written with the random suffix...
+      // The on-disk sprite is written with the content-hash suffix...
       const outDir = path.resolve(__dirname, "./out");
       const svgFile = (await readdir(outDir)).find(
         (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
