@@ -5,7 +5,7 @@ An opinionated command-line tool to combine multiple SVG files into a single fil
 ## Features
 
 - SVG optimization using [SVGO](https://svgo.dev/)
-- Removal of `fill` and `stroke` attributes so they may inherit from parent CSS.
+- Removal of _colored_ `fill` and `stroke` attributes so they inherit from parent CSS — while preserving `fill="none"` so unpainted regions stay transparent.
 - (Optional) Type-safe React component export.
 - Bundler-agnostic: a standalone CLI build step, not a plugin — no loader config to maintain.
 
@@ -21,6 +21,8 @@ For many years [SVGR](https://react-svgr.com/) has been the de facto solution fo
 This library is most useful when you have a large number of monochrome SVGs to display on a website - perhaps in multiple places on a single page - and the fill color needs to be modified. That is to say, this library is for icons. Complex SVGs are outside the concerns of this library. For those types of SVGs, I recommend creating a separate process to optimize with SVGO and to import them on an ad-hoc basis.
 
 > While stroke manipulation is possible, it is a best practice to export SVGs with "outlined strokes" so all files can be manipulated predictably.
+
+> **`fill="none"` is preserved.** Only _colored_ `fill`/`stroke` **attributes** are stripped (so the icon inherits `color`); an explicit `fill="none"` is left intact. Icons that rely on unpainted regions — rings, holes, outline-plus-fill pairs, even-odd cutouts — render correctly. (`stroke="none"` may still be dropped as redundant, since `none` is the SVG default for `stroke`. Colors set via inline `style` — e.g. `style="fill:#000"` — are not touched, so export flat `fill`/`stroke` attributes rather than inline styles.)
 
 ## A build step, not a plugin
 
