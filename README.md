@@ -5,7 +5,7 @@ An opinionated command-line tool to combine multiple SVG files into a single fil
 ## Features
 
 - SVG optimization using [SVGO](https://svgo.dev/)
-- Removal of `fill` and `stroke` attributes so they may inherit from parent CSS.
+- Removal of _colored_ `fill` and `stroke` attributes so they inherit from parent CSS — while preserving `fill="none"` so unpainted regions stay transparent.
 - (Optional) Type-safe React component export.
 - Bundler-agnostic: a standalone CLI build step, not a plugin — no loader config to maintain.
 
@@ -21,6 +21,8 @@ For many years [SVGR](https://react-svgr.com/) has been the de facto solution fo
 This library is most useful when you have a large number of monochrome SVGs to display on a website - perhaps in multiple places on a single page - and the fill color needs to be modified. That is to say, this library is for icons. Complex SVGs are outside the concerns of this library. For those types of SVGs, I recommend creating a separate process to optimize with SVGO and to import them on an ad-hoc basis.
 
 > While stroke manipulation is possible, it is a best practice to export SVGs with "outlined strokes" so all files can be manipulated predictably.
+
+> **`fill="none"` is preserved.** Only _colored_ `fill`/`stroke` **attributes** are stripped (so the icon inherits `color`); an explicit `fill="none"` is left intact. Icons that rely on unpainted regions — rings, holes, outline-plus-fill pairs, even-odd cutouts — render correctly. (`stroke="none"` may still be dropped as redundant, since `none` is the SVG default for `stroke`. Colors set via inline `style` — e.g. `style="fill:#000"` — are not touched, so export flat `fill`/`stroke` attributes rather than inline styles.)
 
 ## A build step, not a plugin
 
@@ -64,13 +66,36 @@ Or run it next to your dev server with [`concurrently`](https://github.com/open-
 
 Run `symbol-store -h` for details in your terminal.
 
-| Option | Required | Description                     | Default     |
-| ------ | -------- | ------------------------------- | ----------- |
-| `-i`   | Y        | Path containing SVG files       | N/A         |
-| `-o`   | N        | Path to output the combined SVG | Input path  |
-| `-t`   | N        | Create a TypeScript file?       | Output path |
-| `-r`   | N        | Add random suffix to filenames  | `false`     |
-| `-p`   | N        | URL to proxy SVG requests       | N/A         |
+| Option   | Required | Description                                  | Default     |
+| -------- | -------- | -------------------------------------------- | ----------- |
+| `-i`     | Y        | Path containing SVG files                    | N/A         |
+| `-o`     | N        | Path to output the combined SVG              | Input path  |
+| `-t`     | N        | Create a TypeScript file?                    | Output path |
+| `--hash` | N        | Append a content hash to the sprite filename | `false`     |
+| `-r`     | N        | Deprecated alias for `--hash`                | `false`     |
+| `-p`     | N        | URL to proxy SVG requests                    | N/A         |
+
+The `--hash` suffix is a short, deterministic hash of the sprite's contents: the filename stays identical across builds and machines when the icons don't change, and changes only when they do. That makes a hashed sprite safe to serve with a long-lived [immutable cache](#caching) while still busting automatically after an icon update. (`-r` is kept as a deprecated alias — it used to append a random number.)
+
+## Accessibility
+
+The generated `UseSvg` component ships accessibility defaults so icons behave correctly without extra boilerplate on every usage.
+
+**Decorative (default).** With no `title`, the icon is hidden from assistive technology (`aria-hidden="true"`, `focusable="false"`) — most icons sit beside a text label and shouldn't be announced twice:
+
+```tsx
+<UseSvg node="trash" /> // decorative: not announced
+```
+
+**Meaningful.** Pass a `title` to expose the icon as an image with an accessible name — it renders `role="img"`, an `aria-label`, and a `<title>` element (native tooltip):
+
+```tsx
+<UseSvg node="trash" title="Delete" /> // announced as "Delete"
+```
+
+`title` is the only prop added on top of the standard `SVGProps<SVGSVGElement>`. Because your props are spread after these defaults, you can still override `role` or any `aria-*` attribute when a specific case calls for it.
+
+> **Icon-only controls need a name.** An icon that is the _only_ content of an interactive control — `<button><UseSvg node="trash" /></button>` — produces an **unnamed button**, because the decorative default hides the icon. Give the icon a `title`, or label the control itself (e.g. `aria-label` on the `<button>`). An empty `title=""` is treated as no title, so it stays decorative.
 
 ## Cross-Origin Requests
 
@@ -90,16 +115,19 @@ export const UseSvg = ({ node, ...props }: UseProps) => (
 );
 ```
 
+> Simplified for clarity — `--proxy` only changes the `<use>` reference. The real generated component also includes [accessibility defaults](#accessibility).
+
 You'll need to create a route handler to proxy the requests:
 
 ```typescript
 // app/api/symbol-store/route.ts
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-export async function GET() {
+export async function GET(request: Request) {
   const isDev = process.env.NEXT_PHASE === PHASE_DEVELOPMENT_SERVER;
 
   // In development, read the sprite from ./public on disk. In production, fetch
@@ -114,14 +142,32 @@ export async function GET() {
         res.text()
       );
 
+  // This endpoint has a *stable* URL (`/api/symbol-store` — no hash is baked in),
+  // so its contents are mutable and must NOT be served `immutable`: that would
+  // pin returning visitors to a stale sprite for up to a year after a redeploy.
+  // Attach a content ETag and revalidate instead — an unchanged sprite returns a
+  // cheap 304, and an icon update is picked up on the next request.
+  const etag = `"${createHash("sha256").update(svg).digest("hex").slice(0, 16)}"`;
+  const cacheControl = "public, max-age=0, must-revalidate";
+
+  if (request.headers.get("if-none-match") === etag) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: { ETag: etag, "Cache-Control": cacheControl },
+    });
+  }
+
   return new NextResponse(svg, {
     headers: {
       "Content-Type": "image/svg+xml",
-      "Cache-Control": "public, max-age=31536000",
+      "Cache-Control": cacheControl,
+      ETag: etag,
     },
   });
 }
 ```
+
+> **Caching:** because the proxy URL is stable, don't mark it `immutable`. If you'd rather cache at the edge, `s-maxage` + `stale-while-revalidate` (e.g. `public, s-maxage=86400, stale-while-revalidate=604800`) is a good alternative that bounds staleness while still revalidating. The static (non-proxy) sprite can be hashed with [`--hash`](#options) and served `immutable`; see [Caching](#caching).
 
 ### Alternative: inline the sprite (no proxy)
 
@@ -174,7 +220,7 @@ Next.js doesn't add long-lived cache headers to files in `public/` — only asse
 
 You can cache it aggressively with a `headers()` rule in `next.config.ts`, **but only mark it `immutable` if its URL changes whenever its contents do** — otherwise returning visitors keep the stale sprite until the cache expires.
 
-The safe way is to give the sprite a per-build filename (the `-r` flag) and match that filename:
+The safe way is to give the sprite a content-hashed filename (the `--hash` flag) and match that filename:
 
 ```ts
 // next.config.ts
@@ -182,7 +228,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:sprite(symbolstore-\\d+\\.svg)",
+        source: "/:sprite(symbolstore-[0-9a-f]+\\.svg)",
         headers: [
           {
             key: "Cache-Control",
@@ -197,9 +243,9 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-If you serve the stable `symbolstore.svg` filename instead, don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
+If you serve the stable `symbolstore.svg` filename instead (no `--hash`), don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
 
-> **Note:** `-r` currently appends a random number; deterministic, content-based hashing is planned in [#8](https://github.com/timhettler/symbol-store/issues/8).
+The demo app's [`next.config.ts`](test/next.config.ts) shows both rules side by side: an `immutable` rule matching the hashed pattern, and a revalidating rule for the stable filename it actually ships.
 
 ## References & Prior Art
 
