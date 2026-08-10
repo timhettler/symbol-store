@@ -31,6 +31,10 @@ program
   .option(
     "-p, --proxy <type>",
     "URL to proxy SVG requests through (e.g., /api/sprite)"
+  )
+  .option(
+    "--inline",
+    "also emit a <SymbolStoreSprite> component and reference icons in-document (no proxy; works cross-origin)"
   );
 
 program.parse();
@@ -82,9 +86,19 @@ const svgIds = svgFiles.map((file) => {
 });
 
 if (typescriptOutput) {
-  const proxyUrl = options.proxy
-    ? `${options.proxy}#`
-    : `/${spriteFilename}#`;
+  if (options.inline && options.proxy) {
+    console.warn(
+      "Warning: --inline overrides --proxy; inline icons resolve in-document (no proxy)."
+    );
+  }
+
+  // Inline mode references the sprite in the *same document* (`#id`); otherwise
+  // the reference points at the proxy endpoint or the on-disk sprite URL.
+  const hrefPrefix = options.inline
+    ? "#"
+    : options.proxy
+      ? `${options.proxy}#`
+      : `/${spriteFilename}#`;
 
   const template = `import React from "react";
 
@@ -97,7 +111,7 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
 
 export const UseSvg = ({ node, ...props }: UseProps) => (
   <svg {...props}>
-    <use href={\`${proxyUrl}\${node}\`} />
+    <use href={\`${hrefPrefix}\${node}\`} />
   </svg>
 );`;
 
@@ -113,6 +127,39 @@ export const UseSvg = ({ node, ...props }: UseProps) => (
   const helperPath = path.resolve(typescriptOutput, "UseSvg.tsx");
   fs.writeFileSync(helperPath, ReactComponent);
   console.log(`Wrote helper → ${path.relative(process.cwd(), helperPath)}`);
+
+  if (options.inline) {
+    // Bake the sprite into a component that injects it into the document once.
+    // Because `<use href="#id">` then resolves against the same document, this
+    // works from any origin with no proxy — at the cost of one copy of the
+    // sprite's definitions in the DOM (a fixed cost, not per-icon).
+    const spriteComponent = `import React from "react";
+
+const SPRITE = ${JSON.stringify(svg)};
+
+/**
+ * Injects the SVG sprite into the document so <use href="#id"> resolves against
+ * the same document — no proxy, works cross-origin. Render this ONCE, high in
+ * the tree (e.g. your root layout). It renders no visible output.
+ */
+export const SymbolStoreSprite: React.FC = () => (
+  <div
+    style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+    aria-hidden="true"
+    dangerouslySetInnerHTML={{ __html: SPRITE }}
+  />
+);
+`;
+
+    const spriteComponentPath = path.resolve(
+      typescriptOutput,
+      "SymbolStoreSprite.tsx"
+    );
+    fs.writeFileSync(spriteComponentPath, spriteComponent);
+    console.log(
+      `Wrote inline sprite → ${path.relative(process.cwd(), spriteComponentPath)} (render <SymbolStoreSprite /> once, e.g. in your root layout)`
+    );
+  }
 
   if (options.proxy && useRandomSuffix) {
     console.log(

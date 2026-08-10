@@ -39,6 +39,8 @@ export default function SimplePage() {
       <Text as="p" size="2" color="gray" align="center">
         Hosting the sprite on a different origin (a CDN)?{" "}
         <Link href="/proxy">See the proxy example →</Link>
+        <br />
+        Can&apos;t run a proxy? <Link href="/inline">See the inline example →</Link>
       </Text>
     </Flex>
   );

@@ -109,13 +109,37 @@ If running a proxy isn't an option, the sprite can instead be **inlined** into t
 
 The trade-off is DOM size. Inlining adds one copy of the whole sprite's definitions to the page (a fixed cost, _not_ multiplied by how many icons you render), whereas the proxy keeps them in a separately-cached file and the page at just `<use>` references. That runs against the minimal-DOM goal described in [Motivation](#motivation), which is why the proxy is the default recommendation.
 
-Inline output isn't built into the CLI yet — it's tracked in [#5](https://github.com/timhettler/symbol-store/issues/5).
+Generate inline output with the `--inline` flag:
+
+```shell
+symbol-store -i ./icons -o ./public -t ./src/components --inline
+```
+
+Alongside `UseSvg` (whose `<use href="#icon">` now resolves in-document), this emits a `SymbolStoreSprite` component with the sprite baked in. Render it **once**, high in the tree — e.g. your root layout:
+
+```tsx
+// app/layout.tsx
+import { SymbolStoreSprite } from "@/components/SymbolStoreSprite";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <SymbolStoreSprite />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+`SymbolStoreSprite` is a server component that injects static markup, so there's no client JS and no flash: the sprite ships in the initial HTML and persists across client navigations. `<UseSvg node="…" />` then resolves against it from any origin.
 
 ## First paint
 
 Because icons are referenced from an external file via `<use href="…">`, the browser must fetch the sprite before it can paint any icon — the glyphs aren't part of the server-rendered HTML. On a cold cache this means icons appear a moment after the rest of the page (a brief flash of no-icon), and the [proxy](#cross-origin-requests) can add a server round-trip (e.g. fetching from your CDN) in front of that request.
 
-[Preloading](#preloading) the sprite largely mitigates this. For icons that must be visible immediately — above the fold, for example — inlining the sprite into the document avoids the extra request entirely; that mode is tracked in [#5](https://github.com/timhettler/symbol-store/issues/5).
+[Preloading](#preloading) the sprite largely mitigates this. For icons that must be visible immediately — above the fold, for example — [inlining the sprite](#alternative-inline-the-sprite-no-proxy) with `--inline` avoids the extra request entirely.
 
 ## Preloading
 
