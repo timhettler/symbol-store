@@ -32,8 +32,8 @@ function getSvgDataFromFile(filePath: string): {
   const id = getSymbolId(filePath);
   let viewBox = $root.attr("viewBox");
   if (!viewBox) {
-    // No viewBox: try to derive one from width/height so the symbol scales
-    // predictably. Otherwise warn rather than emit an invalid empty attribute.
+    // No viewBox: derive one from width/height when possible so the symbol
+    // scales predictably; otherwise warn.
     const width = $root.attr("width");
     const height = $root.attr("height");
     const w = width ? parseFloat(width) : NaN;
@@ -55,7 +55,7 @@ function getSvgSymbol(
   viewBox?: string,
   content: string | null = ""
 ): string {
-  // Omit viewBox entirely when absent rather than emitting an invalid `viewBox=""`.
+  // Include the viewBox only when present (an empty `viewBox=""` is invalid).
   const viewBoxAttr = viewBox ? ` viewBox="${viewBox}"` : "";
   return `<symbol id="${id}"${viewBoxAttr}>${content}</symbol>`;
 }

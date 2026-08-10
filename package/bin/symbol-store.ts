@@ -65,11 +65,10 @@ function collectSvgFiles(dir: string): string[] {
     .sort();
 }
 
-// Never treat a previously-written sprite (living in the output dir) as an input
-// icon. This matters when the output dir *is* the input dir or is nested under
-// it — the default `-o` is the input path, so a re-run would otherwise pick up
-// its own `symbolstore.svg` and emit a bogus `symbolstore` symbol (or throw on a
-// duplicate id).
+// Exclude generated sprites (`symbolstore*.svg`) that live in the output dir
+// from the input walk. With the default `-o` (output === input), or an output
+// dir nested under the input, they would otherwise be read back in as icons —
+// producing a bogus `symbolstore` symbol or a duplicate-id error.
 const resolvedOutput = path.resolve(output);
 const svgFiles = collectSvgFiles(input).filter(
   (file) =>
@@ -117,8 +116,7 @@ const spritePath = path.resolve(output, spriteFilename);
 fs.writeFileSync(spritePath, svg);
 console.log(`Wrote sprite → ${path.relative(process.cwd(), spritePath)}`);
 
-// Reuse the already-parsed data (no second directory read / re-parse) for the
-// TypeScript helper's list of symbol ids.
+// Build the TypeScript helper's list of symbol ids from the already-parsed data.
 const svgIds = parsedSvgs.map(({ id }) => id);
 
 if (typescriptOutput) {
