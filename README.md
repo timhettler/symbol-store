@@ -70,6 +70,8 @@ The generated `UseSvg` component ships accessibility defaults so icons behave co
 
 `title` is the only prop added on top of the standard `SVGProps<SVGSVGElement>`. Because your props are spread after these defaults, you can still override `role` or any `aria-*` attribute when a specific case calls for it.
 
+> **Icon-only controls need a name.** An icon that is the _only_ content of an interactive control — `<button><UseSvg node="trash" /></button>` — produces an **unnamed button**, because the decorative default hides the icon. Give the icon a `title`, or label the control itself (e.g. `aria-label` on the `<button>`). An empty `title=""` is treated as no title, so it stays decorative.
+
 ## Cross-Origin Requests
 
 The SVG `<use>` element does not work with cross-origin requests. If your symbol is hosted on a different domain than your application, you'll need to proxy the request. Here's an example using Next.js route handlers:
