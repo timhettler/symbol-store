@@ -225,6 +225,8 @@ export default nextConfig;
 
 If you serve the stable `symbolstore.svg` filename instead (no `--hash`), don't mark it `immutable`; use a revalidating policy such as `public, max-age=0, must-revalidate` so icon updates are picked up on the next request.
 
+The demo app's [`next.config.ts`](test/next.config.ts) shows both rules side by side: an `immutable` rule matching the hashed pattern, and a revalidating rule for the stable filename it actually ships.
+
 ## References & Prior Art
 
 - [svgstore](https://github.com/svgstore/svgstore)
