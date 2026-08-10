@@ -10,12 +10,8 @@
     "package.json",
     "README.md",
     "LICENSE.txt",
-    "bin/**/*.ts",
-    "lib/**/*.ts",
     "dist/**/*.js",
-    "dist/**/*.js.map",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map"
+    "dist/**/*.d.ts"
   ],
   "bin": "./dist/bin/symbol-store.js",
   "imports": {

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
@@ -20,6 +20,10 @@ import { NextResponse } from "next/server";
  *   const res = await fetch("https://cdn.example.com/symbolstore.svg");
  *   const svg = await res.text();
  *
+ * The on-disk filename may carry a content hash (`symbolstore-<hash>.svg`, from
+ * `symbol-store --hash`), so we resolve it from /public rather than hardcoding a
+ * name — this route works whether or not `--hash` is used.
+ *
  * Caching: this endpoint has a STABLE URL (the helper intentionally doesn't bake
  * a hash into `/api/symbol-store`), so its contents are mutable and must NOT be
  * served `immutable` — that would pin returning visitors to a stale sprite for up
@@ -27,9 +31,21 @@ import { NextResponse } from "next/server";
  * and revalidate: an unchanged sprite comes back as a cheap `304 Not Modified`,
  * and an icon update is picked up on the very next request.
  */
+async function resolveSpriteFile(publicDir: string): Promise<string | null> {
+  const entries = await readdir(publicDir);
+  // Matches `symbolstore.svg` and a hashed `symbolstore-<hash>.svg`.
+  return entries.find((f) => /^symbolstore(-[0-9a-f]+)?\.svg$/.test(f)) ?? null;
+}
+
 export async function GET(request: Request) {
-  const spritePath = path.join(process.cwd(), "public", "symbolstore.svg");
-  const svg = await readFile(spritePath, "utf-8");
+  const publicDir = path.join(process.cwd(), "public");
+  const spriteFile = await resolveSpriteFile(publicDir);
+
+  if (!spriteFile) {
+    return new NextResponse("Sprite not found", { status: 404 });
+  }
+
+  const svg = await readFile(path.join(publicDir, spriteFile), "utf-8");
 
   const etag = `"${createHash("sha256").update(svg).digest("hex").slice(0, 16)}"`;
   const cacheControl = "public, max-age=0, must-revalidate";
