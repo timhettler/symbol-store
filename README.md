@@ -52,6 +52,24 @@ Run `symbol-store -h` for details in your terminal.
 | `-r`   | N        | Add random suffix to filenames  | `false`     |
 | `-p`   | N        | URL to proxy SVG requests       | N/A         |
 
+## Accessibility
+
+The generated `UseSvg` component ships accessibility defaults so icons behave correctly without extra boilerplate on every usage.
+
+**Decorative (default).** With no `title`, the icon is hidden from assistive technology (`aria-hidden="true"`, `focusable="false"`) — most icons sit beside a text label and shouldn't be announced twice:
+
+```tsx
+<UseSvg node="trash" /> // decorative: not announced
+```
+
+**Meaningful.** Pass a `title` to expose the icon as an image with an accessible name — it renders `role="img"`, an `aria-label`, and a `<title>` element (native tooltip):
+
+```tsx
+<UseSvg node="trash" title="Delete" /> // announced as "Delete"
+```
+
+`title` is the only prop added on top of the standard `SVGProps<SVGSVGElement>`. Because your props are spread after these defaults, you can still override `role` or any `aria-*` attribute when a specific case calls for it.
+
 ## Cross-Origin Requests
 
 The SVG `<use>` element does not work with cross-origin requests. If your symbol is hosted on a different domain than your application, you'll need to proxy the request. Here's an example using Next.js route handlers:
@@ -69,6 +87,8 @@ export const UseSvg = ({ node, ...props }: UseProps) => (
   </svg>
 );
 ```
+
+> Simplified for clarity — `--proxy` only changes the `<use>` reference. The real generated component also includes [accessibility defaults](#accessibility).
 
 You'll need to create a route handler to proxy the requests:
 
