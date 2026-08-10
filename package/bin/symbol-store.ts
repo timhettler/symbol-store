@@ -6,7 +6,7 @@ import { Command } from "commander";
 import {
   getSvgDataFromFile,
   getSVGSprite,
-  getSvgSymbolFromFile,
+  getSvgSymbol,
 } from "../lib/index.ts";
 import { optimizeSvg } from "../lib/utils/optimizeSvg.ts";
 import pkg from "#root/package.json" with { type: "json" };
@@ -51,13 +51,44 @@ const randomSuffix = useRandomSuffix
   ? `-${Math.floor(Math.random() * 10000)}`
   : "";
 
-const symbolDefinitions = fs
-  .readdirSync(input)
-  .filter((file) => file.endsWith(".svg"))
-  .reduce((acc, file) => {
-    acc += getSvgSymbolFromFile(path.resolve(input, file));
-    return acc;
-  }, "");
+// Recursively collect every .svg under the input dir (nested folders included),
+// in a deterministic (sorted) order.
+function collectSvgFiles(dir: string): string[] {
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .flatMap((entry) => {
+      const full = path.resolve(dir, entry.name);
+      if (entry.isDirectory()) return collectSvgFiles(full);
+      if (entry.isFile() && entry.name.endsWith(".svg")) return [full];
+      return [];
+    })
+    .sort();
+}
+
+const svgFiles = collectSvgFiles(input);
+
+if (svgFiles.length === 0) {
+  throw new Error(`No .svg files found in "${input}".`);
+}
+
+// Read + parse each file exactly once, and reject duplicate ids (symbol ids come
+// from filenames, so the same basename in two folders would collide).
+const seenIds = new Map<string, string>();
+const parsedSvgs = svgFiles.map((filePath) => {
+  const data = getSvgDataFromFile(filePath);
+  const existing = seenIds.get(data.id);
+  if (existing) {
+    throw new Error(
+      `Duplicate symbol id "${data.id}" from "${filePath}" and "${existing}". Symbol ids come from filenames and must be unique across all (nested) input folders.`
+    );
+  }
+  seenIds.set(data.id, filePath);
+  return data;
+});
+
+const symbolDefinitions = parsedSvgs
+  .map(({ id, viewBox, content }) => getSvgSymbol(id, viewBox, content))
+  .join("");
 
 const svg = optimizeSvg(getSVGSprite(symbolDefinitions));
 
@@ -74,12 +105,9 @@ const spritePath = path.resolve(output, spriteFilename);
 fs.writeFileSync(spritePath, svg);
 console.log(`Wrote sprite → ${path.relative(process.cwd(), spritePath)}`);
 
-// Use getSvgDataFromFile to get the ID of every SVG in a directory and output them to a typescript file containing an array of strings
-const svgFiles = fs.readdirSync(input).filter((file) => file.endsWith(".svg"));
-const svgIds = svgFiles.map((file) => {
-  const { id } = getSvgDataFromFile(path.resolve(input, file));
-  return id;
-});
+// Reuse the already-parsed data (no second directory read / re-parse) for the
+// TypeScript helper's list of symbol ids.
+const svgIds = parsedSvgs.map(({ id }) => id);
 
 if (typescriptOutput) {
   const proxyUrl = options.proxy

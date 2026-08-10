@@ -19,8 +19,13 @@ describe("Create funtions", () => {
     equal(getSymbolId("foo"), "foo");
     equal(getSymbolId("foo-bar"), "foo-bar");
     equal(getSymbolId("foo_bar"), "foo_bar");
-    equal(getSymbolId("foo!"), "foo!");
+    equal(getSymbolId("icon.v2.svg"), "icon.v2"); // dot allowed; .svg stripped
+    equal(getSymbolId("_foo"), "_foo");
     equal(getSymbolId("foo1"), "foo1");
+    // XML-invalid names must be rejected — `<use href="#foo!">` can't resolve.
+    throws(() => {
+      getSymbolId("foo!");
+    }, Error);
     throws(() => {
       getSymbolId("0foo");
     }, Error);
@@ -33,6 +38,8 @@ describe("Create funtions", () => {
       getSvgSymbol("foo", "bar", "baz"),
       `<symbol id="foo" viewBox="bar">baz</symbol>`,
     );
+    // No viewBox → the attribute is omitted, not emitted empty.
+    equal(getSvgSymbol("foo", undefined, "baz"), `<symbol id="foo">baz</symbol>`);
   });
 
   it("get SVG data from file", () => {

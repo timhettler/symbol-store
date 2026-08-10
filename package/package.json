@@ -22,6 +22,9 @@
     "#root/*": "./*"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=18.20.0 <19 || >=20.10.0"
+  },
   "keywords": [
     "ui",
     "svg",

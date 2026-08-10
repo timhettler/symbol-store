@@ -34,10 +34,30 @@ The practical consequence is that it's **bundler-agnostic**. The generated `.svg
 yarn add @timhettler/symbol-store
 ```
 
+> **Node ≥ 18.20 or ≥ 20.10** is required to run the CLI (it uses JSON import attributes, which 19.x and 20.0–20.9 don't support).
+
 ## Usage
 
 ```shell
 symbol-store -i ./icons -o ./public -t ./src/components
+```
+
+Icons in nested sub-folders are included too (the input directory is walked recursively). Symbol ids come from filenames, so a given name must be unique across all folders.
+
+### Watching for changes
+
+`symbol-store` is a one-shot build step — it doesn't watch. In development, re-run it whenever icons change with any file watcher, e.g. [`chokidar-cli`](https://github.com/open-cli-tools/chokidar-cli):
+
+```shell
+chokidar "icons/**/*.svg" -c "symbol-store -i ./icons -o ./public -t ./src/components"
+```
+
+Or run it next to your dev server with [`concurrently`](https://github.com/open-cli-tools/concurrently):
+
+```json
+"scripts": {
+  "dev": "concurrently \"next dev\" \"chokidar 'icons/**/*.svg' -c 'symbol-store -i ./icons -o ./public -t ./src/components'\""
+}
 ```
 
 ## Options
