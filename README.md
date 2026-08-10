@@ -173,6 +173,8 @@ export async function GET(request: Request) {
 
 > **Caching:** because the proxy URL is stable, don't mark it `immutable`. If you'd rather cache at the edge, `s-maxage` + `stale-while-revalidate` (e.g. `public, s-maxage=86400, stale-while-revalidate=604800`) is a good alternative that bounds staleness while still revalidating. The static (non-proxy) sprite can be hashed with [`--hash`](#options) and served `immutable`; see [Caching](#caching).
 
+> **Using `--hash`?** The on-disk sprite is then named `symbolstore-<hash>.svg`, so the proxy handler must resolve that filename rather than hardcoding `symbolstore.svg` — e.g. `readdir("public")` and match `^symbolstore(-[0-9a-f]+)?\.svg$`. The demo route ([`test/src/app/api/symbol-store/route.ts`](test/src/app/api/symbol-store/route.ts)) does exactly this, so it works with or without `--hash`.
+
 ### Alternative: inline the sprite (no proxy)
 
 Inlining bakes the sprite into the document: the `<symbol>` definitions are injected once so `<use href="#icon">` resolves against the same document. Because nothing is loaded cross-origin, this **works from any origin with no proxy**, and because the definitions ship in the server-rendered HTML there's **no extra request and no flash of missing icons** (see [First paint](#first-paint)).
@@ -212,6 +214,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 `SymbolStoreSprite` is a server component that injects static markup, so there's no client JS and no flash: the sprite ships in the initial HTML and persists across client navigations. `<Icon node="…" />` then resolves against it from any origin.
+
+> **Content-Security-Policy.** `--inline` injects the sprite into your document, and the injected markup hides the sprite container with inline `style` attributes — deliberately, because a plain `display:none` can stop some browsers from resolving `<use>`. Under a strict CSP, inline mode therefore needs `style-src 'unsafe-inline'` (or a per-request nonce). If that isn't acceptable, prefer the default static-file or [proxy](#cross-origin-requests) mode: there the sprite lives in a **separate file** referenced by `<use>`, so none of its markup — inline styles included — enters your document.
+>
+> The sprite is your own build-time input, so the `dangerouslySetInnerHTML` in `SymbolStoreSprite` is safe. If your icon pipeline ever ingests untrusted SVG, sanitize it before generating.
 
 ## First paint
 
