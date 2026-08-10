@@ -185,7 +185,7 @@ describe("Symbol Store CLI", function () {
         return;
       }
 
-      // The on-disk sprite is written with the random suffix...
+      // The on-disk sprite is written with the content-hash suffix...
       const outDir = path.resolve(__dirname, "./out");
       const svgFile = (await readdir(outDir)).find(
         (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
