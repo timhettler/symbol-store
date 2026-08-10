@@ -68,9 +68,14 @@ describe("Symbol Store CLI", function () {
 
       equal(!!svgFile, true, "Hashed SVG file not found");
 
-      // The suffix is a lowercase-hex content hash, not a random number.
+      // The suffix must be exactly 8 lowercase-hex chars (a content hash). A
+      // looser `[0-9a-f]+` check would still pass the old random *decimal* int.
       const suffix = svgFile?.match(/-[0-9a-f]+/)?.[0];
-      equal(!!suffix, true, "Hex content-hash suffix not found in SVG filename");
+      equal(
+        /^-[0-9a-f]{8}$/.test(String(suffix)),
+        true,
+        "suffix should be exactly 8 lowercase-hex chars"
+      );
 
       // Read the React component file
       const reactContent = await readFile(
@@ -94,35 +99,53 @@ describe("Symbol Store CLI", function () {
     this.timeout(8000);
 
     const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out --hash`;
-    const outDir = path.resolve(__dirname, "./out");
 
-    const hashedFile = async () =>
-      (await readdir(outDir)).find(
-        (file) => file.startsWith("symbolstore-") && file.endsWith(".svg")
-      );
+    // Read each run's actual output filename from stdout ("Wrote sprite → …"),
+    // rather than scanning the shared out dir (which can't distinguish the two
+    // runs and could mask a non-deterministic regression).
+    const nameFrom = (stdout: string) =>
+      stdout.match(/symbolstore-[0-9a-f]{8}\.svg/)?.[0];
 
-    exec(command, async (error) => {
+    exec(command, (error, stdout1) => {
       if (error) {
         done(error);
         return;
       }
-      const first = await hashedFile();
-      equal(!!first, true, "Hashed SVG file not found on first run");
+      const first = nameFrom(stdout1);
+      equal(!!first, true, "hashed filename was not printed on the first run");
 
       // Re-run with identical input; the content-addressed filename must not change.
-      exec(command, async (error2) => {
+      exec(command, (error2, stdout2) => {
         if (error2) {
           done(error2);
           return;
         }
-        const second = await hashedFile();
         equal(
-          second,
+          nameFrom(stdout2),
           first,
-          "Identical input produced a different hashed filename"
+          "identical input produced a different hashed filename"
         );
         done();
       });
+    });
+  });
+
+  it("warns that -r/--random-suffix is deprecated", function (done) {
+    this.timeout(5000);
+
+    const command = `./bin/symbol-store.ts -i ./__test__/icons -o ./__test__/out -r`;
+
+    exec(command, (error, _stdout, stderr) => {
+      if (error) {
+        done(error);
+        return;
+      }
+      equal(
+        /deprecated/i.test(stderr),
+        true,
+        "expected a deprecation warning on stderr for -r"
+      );
+      done();
     });
   });
 

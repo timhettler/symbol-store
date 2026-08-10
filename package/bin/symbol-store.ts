@@ -57,9 +57,13 @@ if (options.randomSuffix && !options.hash) {
   );
 }
 
+// Sort before concatenating: `readdirSync` order is filesystem-dependent, so
+// without this the sprite bytes (and therefore the content hash) could differ
+// between machines (e.g. macOS vs. a Linux CI box) for identical icons.
 const symbolDefinitions = fs
   .readdirSync(input)
   .filter((file) => file.endsWith(".svg"))
+  .sort()
   .reduce((acc, file) => {
     acc += getSvgSymbolFromFile(path.resolve(input, file));
     return acc;
@@ -88,8 +92,13 @@ const spritePath = path.resolve(output, spriteFilename);
 fs.writeFileSync(spritePath, svg);
 console.log(`Wrote sprite → ${path.relative(process.cwd(), spritePath)}`);
 
-// Use getSvgDataFromFile to get the ID of every SVG in a directory and output them to a typescript file containing an array of strings
-const svgFiles = fs.readdirSync(input).filter((file) => file.endsWith(".svg"));
+// Use getSvgDataFromFile to get the ID of every SVG in a directory and output
+// them to a typescript file containing an array of strings. Sorted so the
+// generated SYMBOL_IDS order is stable across machines too.
+const svgFiles = fs
+  .readdirSync(input)
+  .filter((file) => file.endsWith(".svg"))
+  .sort();
 const svgIds = svgFiles.map((file) => {
   const { id } = getSvgDataFromFile(path.resolve(input, file));
   return id;
