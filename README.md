@@ -175,9 +175,17 @@ export async function GET(request: Request) {
 
 ### Alternative: inline the sprite (no proxy)
 
-If running a proxy isn't an option, the sprite can instead be **inlined** into the document: fetch it once and inject the `<symbol>` definitions into the DOM so `<use href="#icon">` resolves against the same document — which works from any origin, with no proxy required.
+Inlining bakes the sprite into the document: the `<symbol>` definitions are injected once so `<use href="#icon">` resolves against the same document. Because nothing is loaded cross-origin, this **works from any origin with no proxy**, and because the definitions ship in the server-rendered HTML there's **no extra request and no flash of missing icons** (see [First paint](#first-paint)).
 
-The trade-off is DOM size. Inlining adds one copy of the whole sprite's definitions to the page (a fixed cost, _not_ multiplied by how many icons you render), whereas the proxy keeps them in a separately-cached file and the page at just `<use>` references. That runs against the minimal-DOM goal described in [Motivation](#motivation), which is why the proxy is the default recommendation.
+#### When to reach for `--inline`
+
+It's frequently the simplest _correct_ choice for small-to-moderate icon sets: it sidesteps both the cross-origin `<use>` restriction and the cold-cache flash, with no proxy route to run or preload to configure.
+
+- **Use `--inline`** when the sprite is small (rule of thumb: it gzips to ≲ 5–8 KB) and/or the app is navigation-light — a dashboard or SPA where a full-document load is rare. The one-copy-per-document cost is negligible and you get cross-origin correctness and instant paint for free.
+- **Prefer the default static sprite** (optionally [`--hash`](#options) + an `immutable` cache; see [Caching](#caching)) when the icon set is large or the site is high-traffic with many full page loads. A separately-cached file is fetched once and reused across every page and repeat visit — more bandwidth-efficient at scale, and the [Motivation](#motivation) case this library was built for.
+- **Add [`--proxy`](#cross-origin-requests)** when you want that separately-cached file but it lives on a different origin (a CDN).
+
+The cost of inlining is payload: one copy of the sprite's definitions rides along in **every** HTML document. It's a fixed cost — _not_ multiplied by how many icons you render — but it's re-sent on each full-page navigation instead of being cached as its own file, which is why it isn't the default.
 
 Generate inline output with the `--inline` flag:
 
