@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Code, Flex, Grid, Heading, Text } from "@radix-ui/themes";
-import { SYMBOL_IDS, UseSvg } from "@/inline/UseSvg";
+import { SYMBOL_IDS, Icon } from "@/inline/Icon";
 import { SymbolStoreSprite } from "@/inline/SymbolStoreSprite";
 
 export default function InlinePage() {
@@ -25,7 +25,7 @@ export default function InlinePage() {
       <Grid columns={{ initial: "4", sm: "6" }} gap="4" align="center">
         {SYMBOL_IDS.map((id) => (
           <Flex key={id} direction="column" align="center" gap="1">
-            <UseSvg node={id} width={28} height={28} fill="var(--gray-12)" />
+            <Icon node={id} width={28} height={28} fill="var(--gray-12)" />
             <Text size="1" color="gray">
               {id}
             </Text>

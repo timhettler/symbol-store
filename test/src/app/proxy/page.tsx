@@ -23,12 +23,12 @@ export default function ProxyPage() {
         <Code>{`preload("/api/symbol-store", { as: "fetch", crossOrigin: "anonymous" });`}</Code>
       </blockquote>
       <Text as="p">
-        Referenced by the generated <Code>UseSvg</Code> component:
+        Referenced by the generated <Code>Icon</Code> component:
       </Text>
       <blockquote>
         <Code
           style={{ whiteSpace: "pre" }}
-        >{`export const UseSvg = ({ node, ...props }: UseProps) => (
+        >{`export const Icon = ({ node, ...props }: IconProps) => (
   <svg {...props}>
     <use href={\`/api/symbol-store#\${node}\`} />
   </svg>

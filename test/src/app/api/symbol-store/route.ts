@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
  * SVG `<use href="…">` never resolves cross-origin, so when the sprite is hosted
  * on a different origin (a CDN, e.g. via Next's `assetPrefix`) the icons silently
  * break. Routing the reference through this same-origin handler sidesteps that:
- * `UseSvg` points at `/api/symbol-store#<id>` and this handler streams the sprite
+ * `Icon` points at `/api/symbol-store#<id>` and this handler streams the sprite
  * from the same origin as the app.
  *
  * In this demo the sprite is read from disk (it also lives in /public for

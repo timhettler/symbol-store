@@ -28,7 +28,7 @@ describe("Inline sprite mode (--inline)", function () {
         return;
       }
 
-      const helper = await readFile(path.resolve(outDir, "UseSvg.tsx"), "utf-8");
+      const helper = await readFile(path.resolve(outDir, "Icon.tsx"), "utf-8");
       // In-document reference: `#id`, no file URL and no proxy path baked in.
       ok(
         helper.includes("`#${node}`"),
@@ -73,8 +73,8 @@ describe("Inline sprite mode (--inline)", function () {
         return;
       }
       ok(
-        existsSync(path.resolve(plainDir, "UseSvg.tsx")),
-        "UseSvg.tsx should still be generated"
+        existsSync(path.resolve(plainDir, "Icon.tsx")),
+        "Icon.tsx should still be generated"
       );
       ok(
         !existsSync(path.resolve(plainDir, "SymbolStoreSprite.tsx")),

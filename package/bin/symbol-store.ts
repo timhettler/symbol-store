@@ -163,7 +163,7 @@ if (typescriptOutput) {
 export const SYMBOL_IDS = <!-- SYMBOL_ID_ARRAY --> as const;
 export type SYMBOL_IDS = typeof SYMBOL_IDS[number];
 
-interface UseProps extends React.SVGProps<SVGSVGElement> {
+interface IconProps extends React.SVGProps<SVGSVGElement> {
   node: SYMBOL_IDS;
   /** Accessible name. Provided -> role="img" + <title>; omitted -> decorative. */
   title?: string;
@@ -176,7 +176,7 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
  * "focusable=false"). Pass a "title" to expose it as a meaningful image
  * ("role=img" with an accessible name and a <title> tooltip).
  */
-export const UseSvg = ({ node, title, ...props }: UseProps) =>
+export const Icon = ({ node, title, ...props }: IconProps) =>
   title ? (
     <svg role="img" aria-label={title} {...props}>
       <title>{title}</title>
@@ -197,7 +197,7 @@ export const UseSvg = ({ node, title, ...props }: UseProps) =>
     fs.mkdirSync(typescriptOutput, { recursive: true });
   }
 
-  const helperPath = path.resolve(typescriptOutput, "UseSvg.tsx");
+  const helperPath = path.resolve(typescriptOutput, "Icon.tsx");
   fs.writeFileSync(helperPath, ReactComponent);
   console.log(`Wrote helper → ${path.relative(process.cwd(), helperPath)}`);
 

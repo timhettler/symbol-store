@@ -24,12 +24,12 @@ export default function SimplePage() {
         <Code>{`preload("/symbolstore.svg", { as: "image", type: "image/svg+xml" });`}</Code>
       </blockquote>
       <Text as="p">
-        Referenced by the generated <Code>UseSvg</Code> component:
+        Referenced by the generated <Code>Icon</Code> component:
       </Text>
       <blockquote>
         <Code
           style={{ whiteSpace: "pre" }}
-        >{`export const UseSvg = ({ node, ...props }: UseProps) => (
+        >{`export const Icon = ({ node, ...props }: IconProps) => (
   <svg {...props}>
     <use href={\`/symbolstore.svg#\${node}\`} />
   </svg>
