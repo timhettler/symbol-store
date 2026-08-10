@@ -46,6 +46,33 @@ describe("Recursive input directory", function () {
     );
   });
 
+  it("ignores a previously-written sprite when output === input", function (done) {
+    this.timeout(5000);
+
+    // Simulate a prior run: an icon plus an already-generated sprite in the dir.
+    const dir = path.join(root, "in-place");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, "alpha.svg"), ICON);
+    writeFileSync(path.join(dir, "symbolstore.svg"), ICON);
+
+    exec(
+      `./bin/symbol-store.ts -i "${dir}" -o "${dir}" -t "${dir}"`,
+      async (error) => {
+        if (error) {
+          done(error);
+          return;
+        }
+        const helper = await readFile(path.join(dir, "UseSvg.tsx"), "utf-8");
+        ok(helper.includes('"alpha"'), "the real icon should be included");
+        ok(
+          !helper.includes('"symbolstore"'),
+          "the generated sprite must not be re-globbed as an icon"
+        );
+        done();
+      }
+    );
+  });
+
   it("errors on a duplicate id across folders", function (done) {
     this.timeout(5000);
 

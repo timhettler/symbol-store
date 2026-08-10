@@ -65,7 +65,19 @@ function collectSvgFiles(dir: string): string[] {
     .sort();
 }
 
-const svgFiles = collectSvgFiles(input);
+// Never treat a previously-written sprite (living in the output dir) as an input
+// icon. This matters when the output dir *is* the input dir or is nested under
+// it — the default `-o` is the input path, so a re-run would otherwise pick up
+// its own `symbolstore.svg` and emit a bogus `symbolstore` symbol (or throw on a
+// duplicate id).
+const resolvedOutput = path.resolve(output);
+const svgFiles = collectSvgFiles(input).filter(
+  (file) =>
+    !(
+      path.dirname(file) === resolvedOutput &&
+      /^symbolstore(-.+)?\.svg$/.test(path.basename(file))
+    )
+);
 
 if (svgFiles.length === 0) {
   throw new Error(`No .svg files found in "${input}".`);
