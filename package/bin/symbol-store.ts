@@ -40,6 +40,11 @@ program
   .option(
     "--inline",
     "also emit a <SymbolStoreSprite> component and reference icons in-document (no proxy; works cross-origin)"
+  )
+  .option(
+    "-c, --component-name <name>",
+    "name for the generated React component (and its file)",
+    "Icon"
   );
 
 program.parse();
@@ -144,6 +149,16 @@ console.log(`Wrote sprite → ${path.relative(process.cwd(), spritePath)}`);
 const svgIds = parsedSvgs.map(({ id }) => id);
 
 if (typescriptOutput) {
+  // Name for the generated component (and its file). Must be a valid PascalCase
+  // identifier — React treats a lowercase-initial name as an HTML tag.
+  const componentName = options.componentName;
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(componentName)) {
+    throw new Error(
+      `Invalid --component-name "${componentName}": use a PascalCase identifier (an uppercase letter followed by letters or digits).`
+    );
+  }
+  const propsName = `${componentName}Props`;
+
   if (options.inline && options.proxy) {
     console.warn(
       "Warning: --inline overrides --proxy; inline icons resolve in-document (no proxy)."
@@ -163,7 +178,7 @@ if (typescriptOutput) {
 export const SYMBOL_IDS = <!-- SYMBOL_ID_ARRAY --> as const;
 export type SYMBOL_IDS = typeof SYMBOL_IDS[number];
 
-interface UseProps extends React.SVGProps<SVGSVGElement> {
+interface ${propsName} extends React.SVGProps<SVGSVGElement> {
   node: SYMBOL_IDS;
   /** Accessible name. Provided -> role="img" + <title>; omitted -> decorative. */
   title?: string;
@@ -176,7 +191,7 @@ interface UseProps extends React.SVGProps<SVGSVGElement> {
  * "focusable=false"). Pass a "title" to expose it as a meaningful image
  * ("role=img" with an accessible name and a <title> tooltip).
  */
-export const UseSvg = ({ node, title, ...props }: UseProps) =>
+export const ${componentName} = ({ node, title, ...props }: ${propsName}) =>
   title ? (
     <svg role="img" aria-label={title} {...props}>
       <title>{title}</title>
@@ -197,7 +212,7 @@ export const UseSvg = ({ node, title, ...props }: UseProps) =>
     fs.mkdirSync(typescriptOutput, { recursive: true });
   }
 
-  const helperPath = path.resolve(typescriptOutput, "UseSvg.tsx");
+  const helperPath = path.resolve(typescriptOutput, `${componentName}.tsx`);
   fs.writeFileSync(helperPath, ReactComponent);
   console.log(`Wrote helper → ${path.relative(process.cwd(), helperPath)}`);
 

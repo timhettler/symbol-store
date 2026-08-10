@@ -34,7 +34,7 @@ describe("Recursive input directory", function () {
           done(error);
           return;
         }
-        const helper = await readFile(path.join(out, "UseSvg.tsx"), "utf-8");
+        const helper = await readFile(path.join(out, "Icon.tsx"), "utf-8");
         ok(
           helper.includes('"alpha"') &&
             helper.includes('"beta"') &&
@@ -62,7 +62,7 @@ describe("Recursive input directory", function () {
           done(error);
           return;
         }
-        const helper = await readFile(path.join(dir, "UseSvg.tsx"), "utf-8");
+        const helper = await readFile(path.join(dir, "Icon.tsx"), "utf-8");
         ok(helper.includes('"alpha"'), "the real icon should be included");
         ok(
           !helper.includes('"symbolstore"'),

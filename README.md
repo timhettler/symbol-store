@@ -71,6 +71,7 @@ Run `symbol-store -h` for details in your terminal.
 | `-i`       | Y        | Path containing SVG files                    | N/A         |
 | `-o`       | N        | Path to output the combined SVG              | Input path  |
 | `-t`       | N        | Create a TypeScript file?                    | Output path |
+| `-c`       | N        | Name for the generated component (and its file) | `Icon`   |
 | `--hash`   | N        | Append a content hash to the sprite filename | `false`     |
 | `-r`       | N        | Deprecated alias for `--hash`                | `false`     |
 | `-p`       | N        | URL to proxy SVG requests                    | N/A         |
@@ -78,25 +79,27 @@ Run `symbol-store -h` for details in your terminal.
 
 The `--hash` suffix is a short, deterministic hash of the sprite's contents: the filename stays identical across builds and machines when the icons don't change, and changes only when they do. That makes a hashed sprite safe to serve with a long-lived [immutable cache](#caching) while still busting automatically after an icon update. (`-r` is kept as a deprecated alias — it used to append a random number.)
 
+The generated component is named `Icon` by default. Pass `-c/--component-name` (a PascalCase name) to change it — e.g. `-c Glyph` emits `Glyph.tsx` exporting `Glyph`.
+
 ## Accessibility
 
-The generated `UseSvg` component ships accessibility defaults so icons behave correctly without extra boilerplate on every usage.
+The generated `Icon` component ships accessibility defaults so icons behave correctly without extra boilerplate on every usage.
 
 **Decorative (default).** With no `title`, the icon is hidden from assistive technology (`aria-hidden="true"`, `focusable="false"`) — most icons sit beside a text label and shouldn't be announced twice:
 
 ```tsx
-<UseSvg node="trash" /> // decorative: not announced
+<Icon node="trash" /> // decorative: not announced
 ```
 
 **Meaningful.** Pass a `title` to expose the icon as an image with an accessible name — it renders `role="img"`, an `aria-label`, and a `<title>` element (native tooltip):
 
 ```tsx
-<UseSvg node="trash" title="Delete" /> // announced as "Delete"
+<Icon node="trash" title="Delete" /> // announced as "Delete"
 ```
 
 `title` is the only prop added on top of the standard `SVGProps<SVGSVGElement>`. Because your props are spread after these defaults, you can still override `role` or any `aria-*` attribute when a specific case calls for it.
 
-> **Icon-only controls need a name.** An icon that is the _only_ content of an interactive control — `<button><UseSvg node="trash" /></button>` — produces an **unnamed button**, because the decorative default hides the icon. Give the icon a `title`, or label the control itself (e.g. `aria-label` on the `<button>`). An empty `title=""` is treated as no title, so it stays decorative.
+> **Icon-only controls need a name.** An icon that is the _only_ content of an interactive control — `<button><Icon node="trash" /></button>` — produces an **unnamed button**, because the decorative default hides the icon. Give the icon a `title`, or label the control itself (e.g. `aria-label` on the `<button>`). An empty `title=""` is treated as no title, so it stays decorative.
 
 ## Cross-Origin Requests
 
@@ -109,7 +112,7 @@ symbol-store -i ./icons -o ./public -t ./src/components -p /api/symbol-store
 This will generate a React component that uses the proxy URL:
 
 ```typescript
-export const UseSvg = ({ node, ...props }: UseProps) => (
+export const Icon = ({ node, ...props }: IconProps) => (
   <svg {...props}>
     <use href={`/api/symbol-store#${node}`} />
   </svg>
@@ -182,7 +185,7 @@ Generate inline output with the `--inline` flag:
 symbol-store -i ./icons -o ./public -t ./src/components --inline
 ```
 
-Alongside `UseSvg` (whose `<use href="#icon">` now resolves in-document), this emits a `SymbolStoreSprite` component with the sprite baked in. Render it **once**, high in the tree — e.g. your root layout:
+Alongside `Icon` (whose `<use href="#icon">` now resolves in-document), this emits a `SymbolStoreSprite` component with the sprite baked in. Render it **once**, high in the tree — e.g. your root layout:
 
 ```tsx
 // app/layout.tsx
@@ -200,7 +203,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-`SymbolStoreSprite` is a server component that injects static markup, so there's no client JS and no flash: the sprite ships in the initial HTML and persists across client navigations. `<UseSvg node="…" />` then resolves against it from any origin.
+`SymbolStoreSprite` is a server component that injects static markup, so there's no client JS and no flash: the sprite ships in the initial HTML and persists across client navigations. `<Icon node="…" />` then resolves against it from any origin.
 
 ## First paint
 

@@ -41,7 +41,7 @@ describe("Symbol Store CLI", function () {
         );
       }
 
-      const reactOutputPath = path.resolve(__dirname, "./out/react/UseSvg.tsx");
+      const reactOutputPath = path.resolve(__dirname, "./out/react/Icon.tsx");
       const reactFileExists = existsSync(reactOutputPath);
       equal(reactFileExists, true, "React output file does not exist");
 
@@ -78,7 +78,7 @@ describe("Symbol Store CLI", function () {
 
       // Read the React component file
       const reactContent = await readFile(
-        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        path.resolve(__dirname, "./out/react/Icon.tsx"),
         "utf-8"
       );
 
@@ -159,7 +159,7 @@ describe("Symbol Store CLI", function () {
       }
 
       const reactContent = await readFile(
-        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        path.resolve(__dirname, "./out/react/Icon.tsx"),
         "utf-8"
       );
 
@@ -195,7 +195,7 @@ describe("Symbol Store CLI", function () {
       // ...but the helper keeps the stable proxy endpoint (no hash baked in),
       // so the proxy route stays a fixed URL the consumer controls.
       const reactContent = await readFile(
-        path.resolve(__dirname, "./out/react/UseSvg.tsx"),
+        path.resolve(__dirname, "./out/react/Icon.tsx"),
         "utf-8"
       );
       equal(

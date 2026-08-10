@@ -7,7 +7,7 @@ import path from "node:path";
 
 // Generated helper should carry sensible accessibility defaults (issue #10):
 // decorative by default, and a labeled `role="img"` variant when `title` is set.
-describe("Generated UseSvg accessibility defaults", function () {
+describe("Generated Icon accessibility defaults", function () {
   let outDir: string;
 
   before(function () {
@@ -28,7 +28,7 @@ describe("Generated UseSvg accessibility defaults", function () {
         return;
       }
 
-      const helper = await readFile(path.resolve(outDir, "UseSvg.tsx"), "utf-8");
+      const helper = await readFile(path.resolve(outDir, "Icon.tsx"), "utf-8");
 
       // Decorative (no title): hidden from assistive tech.
       ok(
@@ -52,7 +52,7 @@ describe("Generated UseSvg accessibility defaults", function () {
       );
       ok(
         helper.includes("title?: string"),
-        "UseProps should declare an optional title"
+        "IconProps should declare an optional title"
       );
 
       done();

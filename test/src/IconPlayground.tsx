@@ -2,8 +2,8 @@
 
 import { startTransition, useState } from "react";
 import { Checkbox, Flex, Select, Text } from "@radix-ui/themes";
-import { SYMBOL_IDS, UseSvg as SimpleUseSvg } from "@/simple/UseSvg";
-import { UseSvg as ProxyUseSvg } from "@/proxy/UseSvg";
+import { SYMBOL_IDS, Icon as SimpleIcon } from "@/simple/Icon";
+import { Icon as ProxyIcon } from "@/proxy/Icon";
 
 /**
  * Shared interactive demo: renders an icon with either the simple/static helper
@@ -21,9 +21,9 @@ export function IconPlayground({ variant }: { variant: "simple" | "proxy" }) {
   return (
     <Flex direction="column" gap="3" align="center">
       {variant === "proxy" ? (
-        <ProxyUseSvg node={name} width={96} height={96} fill={fill} />
+        <ProxyIcon node={name} width={96} height={96} fill={fill} />
       ) : (
-        <SimpleUseSvg node={name} width={96} height={96} fill={fill} />
+        <SimpleIcon node={name} width={96} height={96} fill={fill} />
       )}
       <Text as="p">Icon:</Text>
       <Select.Root
