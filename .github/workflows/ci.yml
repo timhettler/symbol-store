@@ -20,12 +20,12 @@ jobs:
     name: Build & test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Node version comes from .nvmrc (currently 23.6.0), which the package
       # requires for native TypeScript type-stripping in the test suite.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
@@ -35,7 +35,7 @@ jobs:
 
       # enableGlobalCache is false in .yarnrc.yml, so the cache lives in .yarn/cache.
       - name: Cache Yarn
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}

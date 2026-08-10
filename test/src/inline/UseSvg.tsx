@@ -5,10 +5,25 @@ export type SYMBOL_IDS = typeof SYMBOL_IDS[number];
 
 interface UseProps extends React.SVGProps<SVGSVGElement> {
   node: SYMBOL_IDS;
+  /** Accessible name. Provided -> role="img" + <title>; omitted -> decorative. */
+  title?: string;
 }
 
-export const UseSvg = ({ node, ...props }: UseProps) => (
-  <svg {...props}>
-    <use href={`#${node}`} />
-  </svg>
-);
+/**
+ * Renders an icon from the sprite.
+ *
+ * Decorative by default: hidden from assistive tech ("aria-hidden",
+ * "focusable=false"). Pass a "title" to expose it as a meaningful image
+ * ("role=img" with an accessible name and a <title> tooltip).
+ */
+export const UseSvg = ({ node, title, ...props }: UseProps) =>
+  title ? (
+    <svg role="img" aria-label={title} {...props}>
+      <title>{title}</title>
+      <use href={`#${node}`} />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" focusable="false" {...props}>
+      <use href={`#${node}`} />
+    </svg>
+  );
