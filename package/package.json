@@ -18,6 +18,8 @@
     "#root/*": "./*"
   },
   "license": "MIT",
+  "author": "Tim Hettler",
+  "homepage": "https://github.com/timhettler/symbol-store#readme",
   "engines": {
     "node": ">=18.20.0 <19 || >=20.10.0"
   },
