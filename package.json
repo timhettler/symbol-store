@@ -6,9 +6,11 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "release": "turbo run build --filter=@timhettler/symbol-store && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.0",
     "prettier": "^3.2.5",
     "turbo": "^2.10.8",
     "typescript": "^5.7.3"

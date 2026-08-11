@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".nvmrc"
+
+      # Activate the Yarn version pinned in package.json (packageManager: yarn@4.6.0).
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      # No pending changesets → publishes any package whose version isn't yet on
+      # npm (that's how the first 1.0.0 ships). Pending changesets → opens/updates
+      # a "Version Packages" PR; merging that PR triggers the publish.
+      - name: Create Release Pull Request or Publish to npm
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
+        with:
+          publish: yarn release
+        env:
+          # PAT (secret: RELEASE_TOKEN) with `workflows` permission so Changesets
+          # can update the Version PR branch even when it touches
+          # .github/workflows/** — the default GITHUB_TOKEN cannot push those.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
